@@ -62,6 +62,8 @@
     <string name="settings_overlay_direction">Layout Direction</string>
     <string name="settings_overlay_direction_horizontal">Horizontal (Single Line)</string>
     <string name="settings_overlay_direction_vertical">Vertical (Stacked)</string>
+    <string name="settings_overlay_meter_spacing">Meter Spacing</string>
+    <string name="settings_overlay_meter_spacing_desc">Only applies when layout direction is horizontal</string>
     <string name="settings_overlay_alignment">Text Alignment</string>
     <string name="settings_overlay_alignment_start">Left</string>
     <string name="settings_overlay_alignment_center">Center</string>

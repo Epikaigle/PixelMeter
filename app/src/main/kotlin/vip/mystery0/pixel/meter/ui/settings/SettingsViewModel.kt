@@ -39,6 +39,7 @@ class SettingsViewModel(
     val overlayOrderUpFirst = repository.overlayOrderUpFirst
     val overlayDirection = repository.overlayDirection
     val overlayAlignment = repository.overlayAlignment
+    val overlayMeterSpacing = repository.overlayMeterSpacing
     val isOverlayLocked = repository.isOverlayLocked
     val isOverlayShowOnStatusBar = repository.isOverlayShowOnStatusBar
     val isOverlayPortraitOnly = repository.isOverlayPortraitOnly
@@ -115,6 +116,7 @@ class SettingsViewModel(
     fun setOverlayOrderUpFirst(upFirst: Boolean) = repository.setOverlayOrderUpFirst(upFirst)
     fun setOverlayDirection(direction: Int) = repository.setOverlayDirection(direction)
     fun setOverlayAlignment(alignment: Int) = repository.setOverlayAlignment(alignment)
+    fun setOverlayMeterSpacing(spacing: Int) = repository.setOverlayMeterSpacing(spacing)
 
     fun setNotificationEnabled(enabled: Boolean) = repository.setNotificationEnabled(enabled)
     fun setLiveUpdateEnabled(enabled: Boolean) = repository.setLiveUpdateEnabled(enabled)

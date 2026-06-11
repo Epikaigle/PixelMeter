@@ -60,6 +60,7 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
         val KEY_MIN_SPEED_UNIT = intPreferencesKey("key_min_speed_unit")
         val KEY_OVERLAY_DIRECTION = intPreferencesKey("key_overlay_direction")
         val KEY_OVERLAY_ALIGNMENT = intPreferencesKey("key_overlay_alignment")
+        val KEY_OVERLAY_METER_SPACING = intPreferencesKey("key_overlay_meter_spacing")
         val KEY_OVERLAY_PORTRAIT_ONLY = booleanPreferencesKey("key_overlay_portrait_only")
     }
 
@@ -149,6 +150,11 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
     val overlayAlignment: Flow<Int> = dataStore.data
         .map { preferences ->
             preferences[KEY_OVERLAY_ALIGNMENT] ?: 0 // 0: Start, 1: Center, 2: End
+        }
+
+    val overlayMeterSpacing: Flow<Int> = dataStore.data
+        .map { preferences ->
+            preferences[KEY_OVERLAY_METER_SPACING] ?: 8
         }
 
     val notificationTextUp: Flow<String> = dataStore.data
@@ -295,6 +301,12 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
     suspend fun setOverlayAlignment(alignment: Int) {
         dataStore.edit { preferences ->
             preferences[KEY_OVERLAY_ALIGNMENT] = alignment
+        }
+    }
+
+    suspend fun setOverlayMeterSpacing(spacing: Int) {
+        dataStore.edit { preferences ->
+            preferences[KEY_OVERLAY_METER_SPACING] = spacing
         }
     }
 

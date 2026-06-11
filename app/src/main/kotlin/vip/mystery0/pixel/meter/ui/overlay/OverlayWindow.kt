@@ -9,10 +9,11 @@ import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -126,6 +127,7 @@ class OverlayWindow(
                     val upFirst by repository.overlayOrderUpFirst.collectAsState()
                     val direction by repository.overlayDirection.collectAsState()
                     val alignment by repository.overlayAlignment.collectAsState()
+                    val meterSpacing by repository.overlayMeterSpacing.collectAsState()
                     val isOverlayPortraitOnly by repository.isOverlayPortraitOnly.collectAsState()
                     val isOverlayUseDefaultColors by repository.isOverlayUseDefaultColors.collectAsState()
                     val speedUnit by repository.speedUnit.collectAsState()
@@ -200,6 +202,7 @@ class OverlayWindow(
                         upFirst = upFirst,
                         direction = direction,
                         alignment = alignment,
+                        meterSpacing = meterSpacing,
                         speedUnit = speedUnit,
                         minSpeedUnit = minSpeedUnit,
                         onDrag = { x, y ->
@@ -259,6 +262,7 @@ fun OverlayContent(
     upFirst: Boolean,
     direction: Int = 0,
     alignment: Int = 0,
+    meterSpacing: Int = 8,
     speedUnit: Int = 0,
     minSpeedUnit: Int = 0,
     onDrag: (Float, Float) -> Unit,
@@ -291,6 +295,7 @@ fun OverlayContent(
         val text2 = "$prefix2$speed2"
 
         if (direction == 0) {
+            val effectiveMeterSpacing = meterSpacing.coerceAtLeast(0)
             // Horizontal
             Row(
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -303,7 +308,7 @@ fun OverlayContent(
                         textColor
                     )
                 )
-                Box(modifier = Modifier.padding(horizontal = 4.dp))
+                Spacer(modifier = Modifier.width(effectiveMeterSpacing.dp))
                 Text(
                     text = text2,
                     style = MaterialTheme.typography.labelSmall.copy(fontSize = textSize.sp),

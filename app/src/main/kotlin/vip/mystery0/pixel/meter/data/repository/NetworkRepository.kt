@@ -73,6 +73,9 @@ class NetworkRepository(
     private val _overlayAlignment = MutableStateFlow(0)
     val overlayAlignment: StateFlow<Int> = _overlayAlignment.asStateFlow()
 
+    private val _overlayMeterSpacing = MutableStateFlow(8)
+    val overlayMeterSpacing: StateFlow<Int> = _overlayMeterSpacing.asStateFlow()
+
     private val _isOverlayPortraitOnly = MutableStateFlow(false)
     val isOverlayPortraitOnly: StateFlow<Boolean> = _isOverlayPortraitOnly.asStateFlow()
 
@@ -155,6 +158,8 @@ class NetworkRepository(
                     prefs[DataStoreRepository.KEY_OVERLAY_DIRECTION] ?: 0
                 _overlayAlignment.value =
                     prefs[DataStoreRepository.KEY_OVERLAY_ALIGNMENT] ?: 0
+                _overlayMeterSpacing.value =
+                    prefs[DataStoreRepository.KEY_OVERLAY_METER_SPACING] ?: 8
                 _isOverlayPortraitOnly.value =
                     prefs[DataStoreRepository.KEY_OVERLAY_PORTRAIT_ONLY] ?: false
                 _notificationTextUp.value =
@@ -231,6 +236,9 @@ class NetworkRepository(
         }
         scope.launch {
             dataStoreRepository.overlayAlignment.collect { _overlayAlignment.value = it }
+        }
+        scope.launch {
+            dataStoreRepository.overlayMeterSpacing.collect { _overlayMeterSpacing.value = it }
         }
         scope.launch {
             dataStoreRepository.isOverlayPortraitOnly.collect { _isOverlayPortraitOnly.value = it }
@@ -366,6 +374,10 @@ class NetworkRepository(
 
     fun setOverlayAlignment(alignment: Int) {
         scope.launch { dataStoreRepository.setOverlayAlignment(alignment) }
+    }
+
+    fun setOverlayMeterSpacing(spacing: Int) {
+        scope.launch { dataStoreRepository.setOverlayMeterSpacing(spacing) }
     }
 
     fun setOverlayPortraitOnly(portraitOnly: Boolean) {

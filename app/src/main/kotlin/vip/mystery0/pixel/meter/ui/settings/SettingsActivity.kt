@@ -317,6 +317,7 @@ fun OverlaySection(viewModel: SettingsViewModel) {
     val isOverlayPortraitOnly by viewModel.isOverlayPortraitOnly.collectAsState(initial = false)
     val direction by viewModel.overlayDirection.collectAsState(initial = 0)
     val alignment by viewModel.overlayAlignment.collectAsState(initial = 0)
+    val meterSpacing by viewModel.overlayMeterSpacing.collectAsState(initial = 8)
 
     PreferenceCategory(title = { Text(stringResource(R.string.settings_category_overlay)) })
     val isSwitchEnabled = !isServiceRunning || canOverlay
@@ -429,6 +430,19 @@ fun OverlaySection(viewModel: SettingsViewModel) {
             title = { Text(stringResource(R.string.settings_overlay_direction)) },
             values = listOf(labelHorizontal, labelVertical),
             summary = { Text(directionLabel) }
+        )
+
+        SliderPreference(
+            value = 0F,
+            onValueChange = { },
+            sliderValue = meterSpacing.toFloat(),
+            onSliderValueChange = { viewModel.setOverlayMeterSpacing(it.toInt()) },
+            valueRange = 0f..120f,
+            valueSteps = 24,
+            title = { Text(stringResource(R.string.settings_overlay_meter_spacing)) },
+            summary = { Text(stringResource(R.string.settings_overlay_meter_spacing_desc)) },
+            valueText = { Text("${meterSpacing}dp") },
+            enabled = direction == 0
         )
 
         val labelAlignStart = stringResource(R.string.settings_overlay_alignment_start)

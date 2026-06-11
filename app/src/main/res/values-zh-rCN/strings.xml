@@ -61,6 +61,8 @@
     <string name="settings_overlay_direction">排列方向</string>
     <string name="settings_overlay_direction_horizontal">水平 (横向单行)</string>
     <string name="settings_overlay_direction_vertical">垂直 (上下堆叠)</string>
+    <string name="settings_overlay_meter_spacing">网速项间距</string>
+    <string name="settings_overlay_meter_spacing_desc">仅在排列方向为水平时生效</string>
     <string name="settings_overlay_alignment">文本对齐方式</string>
     <string name="settings_overlay_alignment_start">左对齐</string>
     <string name="settings_overlay_alignment_center">居中对齐</string>
