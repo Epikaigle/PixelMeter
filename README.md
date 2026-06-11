@@ -11,6 +11,7 @@
 <p align="center">
     <a href="https://github.com/Pixel-Tailor-CN/PixelMeter/releases/latest"><img src="https://img.shields.io/github/v/release/Mystery00/PixelMeter" alt="GitHub Release"></a>
     <a href="https://play.google.com/store/apps/details?id=vip.mystery0.pixel.meter"><img src="https://img.shields.io/badge/Google_Play-PixelMeter-green?logo=google-play&logoColor=white" alt="Google Play"></a>
+    <a href="https://hosted.weblate.org/engage/pixel-meter/"><img src="https://hosted.weblate.org/widget/pixel-meter/android-app-strings/svg-badge.svg" alt="Translation status"></a>
     <a href="LICENSE"><img src="https://img.shields.io/github/license/Mystery00/PixelMeter" alt="License"></a>
 </p>
 
@@ -67,6 +68,13 @@ interfaces (Wi-Fi, Cellular, Ethernet) to provide accurate real-time speed stati
 - **Architecture Pattern**: MVVM + Clean Architecture
 - **Dependency Injection**: Koin
 - **Data Source**: `TrafficStats` + `ConnectivityManager` (Single Source of Truth)
+
+## Translations
+
+Pixel Meter translations are hosted on Weblate. Contributions are welcome, especially for app
+strings in new languages or improvements to existing translations.
+
+[Help translate Pixel Meter on Weblate](https://hosted.weblate.org/engage/pixel-meter/)
 
 ## License
 

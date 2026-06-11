@@ -11,6 +11,7 @@
 <p align="center">
     <a href="https://github.com/Pixel-Tailor-CN/PixelMeter/releases/latest"><img src="https://img.shields.io/github/v/release/Mystery00/PixelMeter" alt="GitHub Release"></a>
     <a href="https://play.google.com/store/apps/details?id=vip.mystery0.pixel.meter"><img src="https://img.shields.io/badge/Google_Play-PixelMeter-green?logo=google-play&logoColor=white" alt="Google Play"></a>
+    <a href="https://hosted.weblate.org/engage/pixel-meter/"><img src="https://hosted.weblate.org/widget/pixel-meter/android-app-strings/svg-badge.svg" alt="翻译状态"></a>
     <a href="LICENSE"><img src="https://img.shields.io/github/license/Mystery00/PixelMeter" alt="License"></a>
 </p>
 
@@ -56,6 +57,12 @@ Pixel Meter 是一款专为 Google Pixel 和原生 Android 设备设计的网速
 - **架构模式**: MVVM + Clean Architecture
 - **依赖注入**: Koin
 - **核心数据源**: `TrafficStats` + `ConnectivityManager` (单一可信数据源)
+
+## 参与翻译
+
+Pixel Meter 正在使用 Weblate 托管翻译。欢迎开发者和用户贡献新的语言，或帮助改进已有翻译文本。
+
+[在 Weblate 上帮助翻译 Pixel Meter](https://hosted.weblate.org/engage/pixel-meter/)
 
 ## 相关链接
 
