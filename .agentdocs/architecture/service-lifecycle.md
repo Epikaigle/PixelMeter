@@ -6,46 +6,53 @@
 
 - **类名**: `NetworkMonitorService`
 - **类型**: `Foreground Service`
-- **foregroundServiceType**: `dataSync` (Android 14+ 强制要求指定类型并声明权限)。
+- **foregroundServiceType**: Manifest 中声明 `specialUse|dataSync`，Android 14+ 运行时使用
+  `FOREGROUND_SERVICE_TYPE_SPECIAL_USE`，更低版本使用 `FOREGROUND_SERVICE_TYPE_DATA_SYNC`。
 
 ```xml
 
-<service android:name=".service.NetworkMonitorService" android:foregroundServiceType="dataSync"
-    android:exported="false" />
+<service
+    android:name=".service.NetworkMonitorService"
+    android:exported="false"
+    android:foregroundServiceType="specialUse|dataSync">
+    <property
+        android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+        android:value="network_monitor" />
+</service>
 ```
 
 ## 2. 启动与保活
 
 ### 2.1 启动流程
 
-1. **用户开启**: 用户在主界面 Toggle "Enable Monitor"。
+1. **用户开启**: 用户在主界面点击启动按钮。
 2. **Context.startForegroundService()**: 启动服务。
-3. **startForeground()**: 服务 onCreate/onStartCommand 中必须在 5 秒内调用 `startForeground`
-   ，绑定一个持续显示的 Notification，否则会被系统杀掉并抛出 ANR。
-   26:
-   27: ### 2.2 开机自启 (Auto-start)
-   28:
-   29: - **触发机制**: 监听 `BOOT_COMPLETED` 和 `QUICKBOOT_POWERON` 广播。
-   30: - **条件判断**:
-   31:     1. 用户开关: 检查 `key_auto_start_service` 是否为 `true`。
-   32:     2. 权限校验: 直检查应用是否持有 **悬浮窗权限** 或 **通知权限**。若两者皆无，则视为非法状态，不启动服务（避免
-   Android 14+ 启动 FGS 崩溃）。
-   33: - **实现**: `BootReceiver` 在满足上述条件后调用 `startForegroundService`。
+3. **startForeground()**: 服务在 `onStartCommand` 中必须及时调用 `startForeground`
+   ，绑定一个持续显示的 Notification，否则会被系统杀掉并抛出异常。
 
-### 2.2 周期性任务 (Ticker)
+### 2.2 开机自启 (Auto-start)
 
-- 使用 Kotlin Coroutines `flow` 或 `Handler` 实现 1000ms 的周期性任务。
+- **触发机制**: 监听 `BOOT_COMPLETED` 和 `QUICKBOOT_POWERON` 广播。
+- **条件判断**: `BootReceiver` 同步读取 `NetworkRepository.isAutoStartServiceEnabled.value`，仅当用户开启
+  `key_auto_start_service` 时启动服务。
+- **实现**: `BootReceiver` 在满足上述条件后调用 `startForegroundService`，异常时写入 Log，不向外抛出。
+
+### 2.3 周期性任务 (Ticker)
+
+- 使用 Kotlin Coroutines 实现周期性任务，默认采样间隔为 1500ms，用户可在设置页配置 1000ms 到 3000ms。
 - **任务内容**:
-    - 获取当前网速 (Repository.getSpeed)。
+    - 通过 `SpeedDataSource.getTrafficData()` 读取接口流量。
+    - 在 `NetworkRepository` 中根据时间差计算上下行速率。
     - 生成 Notification Bitmap。
     - 更新 NotificationManager。
-    - 发送 EventBus/StateFlow 消息通知 UI 层 (悬浮窗/主页)。
+    - 通过 `StateFlow` 通知 UI 层（悬浮窗/主页），项目未使用 EventBus。
 
 ## 3. Android 14 (API 34) 适配
 
 Android 14 对前台服务有严格限制：
 
-- **权限声明**: 必须在 Manifest 中声明 `android.permission.FOREGROUND_SERVICE` 和
+- **权限声明**: Manifest 中声明了 `android.permission.FOREGROUND_SERVICE`、
+  `android.permission.FOREGROUND_SERVICE_SPECIAL_USE` 和
   `android.permission.FOREGROUND_SERVICE_DATA_SYNC`。
 - **运行时机**: 仅当 App 处于前台（Visible）时才能调用 `startForegroundService`。若 App 在后台尝试启动服务，会抛出
   `ForegroundServiceStartNotAllowedException`。
@@ -54,8 +61,8 @@ Android 14 对前台服务有严格限制：
 
 ## 4. 资源释放
 
-- 当用户手动关闭功能，或点击通知栏 "Exit" 按钮时，调用 `stopForeground(STOP_FOREGROUND_REMOVE)` 并
-  `stopSelf()`，彻底释放资源，停止计费/耗电。
+- 当用户在主界面点击停止，系统会调用 `stopService()`；服务销毁时取消协程、隐藏悬浮窗、停止 Repository
+  监听，并调用 `stopForeground(STOP_FOREGROUND_REMOVE)`。
 
 ## 5. 电量与性能优化 (Power Optimization)
 

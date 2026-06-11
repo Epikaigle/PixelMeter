@@ -3,8 +3,8 @@
 ## 概述
 
 Pixel Meter 采用**单一数据源模式**，利用 Android 原生 `TrafficStats` API 获取实时网速。
-通过指定接口名称 (`wlan0`) 和移动网络接口，我们可以精确统计流量并计算网速，无需 Root 权限，也无需复杂的
-Shizuku IPC。
+通过 `ConnectivityManager.NetworkCallback` 缓存 Wi-Fi、Cellular、Ethernet 等物理网络的接口名称，再逐接口读取
+`TrafficStats.getRxBytes/getTxBytes`，无需 Root 权限，也无需 Shizuku IPC。
 
 ## 核心策略: NetworkCallback 缓存 + TrafficStats
 
@@ -14,7 +14,7 @@ Shizuku IPC。
 
 1. **接口缓存**: 在 `SpeedDataSource` 初始化时注册 `ConnectivityManager.NetworkCallback`。
 2. **实时更新**:
-   - **onAvailable / onCapabilitiesChanged**: 检查网络类型。
+    - **onCapabilitiesChanged / onLinkPropertiesChanged**: 检查网络类型和接口名称。
       - **排除**: `TRANSPORT_VPN` (避免双重统计)。
       - **包含**: `TRANSPORT_WIFI`, `TRANSPORT_CELLULAR`, `TRANSPORT_ETHERNET`。
       - 若符合条件，将 `<Network, InterfaceName>` 存入 `ConcurrentHashMap`。
@@ -22,7 +22,7 @@ Shizuku IPC。
 3. **极速读取**:
    - `getTrafficData()` 不再进行任何 IPC 调用查询 `ConnectivityManager`。
    - 直接遍历缓存中的接口名称列表 (`wlan0`, `rmnet_data0` 等)。
-   - 使用协程并行调用 `TrafficStats.getRx/TxBytes(iface)`。
+   - 使用协程并行调用 `TrafficStats.getRxBytes(iface)` 和 `TrafficStats.getTxBytes(iface)`。
 
 ### 代码结构
 
@@ -68,7 +68,8 @@ override suspend fun getTrafficData() = validInterfaces.values.map { iface ->
 ### 2. Shizuku (Binder IPC) (已移除)
 
 * **问题**: 需要用户激活 Shizuku，门槛较高。
-* **状态**: 随着 `TrafficStats` 物理接口方案的验证成功，Shizuku 模式已被彻底移除，简化了项目架构。
+* **状态**: 随着 `TrafficStats` 物理接口方案的验证成功，Shizuku 模式已被彻底移除，简化了项目架构。当前代码也明确禁止依赖
+  Root 或 Shizuku。
 
 ## 兼容性
 

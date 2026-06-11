@@ -1,6 +1,6 @@
 # Pixel Meter 文档索引
 
-欢迎查阅 Pixel Meter 项目文档。本文档体系遵循 `GEMINI.md` 规范。
+欢迎查阅 Pixel Meter 项目文档。本文档体系遵循仓库根目录的 `AGENTS.md` 规范。
 
 ## 📁 目录结构
 
@@ -10,10 +10,11 @@
 
 ### 2. 架构与技术细节 (Architecture)
 
-- [混合数据源策略 (Data Source Strategy)](architecture/data-source-strategy.md): 详解 Standard API 与
-  流量接口过滤策略。
+- [数据源策略 (Data Source Strategy)](architecture/data-source-strategy.md): 详解 `TrafficStats` 与
+  `ConnectivityManager` 的物理接口过滤策略。
 - [服务生命周期 (Service Lifecycle)](architecture/service-lifecycle.md): 前台服务 (Foreground
-  Service) 的保活机制与 Android 14+ 适配详情。
+  Service)
+  的保活机制、服务类型与 Android 14+ 适配详情。
 
 ### 3. 界面规范 (UI)
 
@@ -26,4 +27,4 @@
 ## 🔗 相关资源
 
 - [GitHub Repository](https://github.com/Pixel-Tailor-CN/PixelMeter)
-- [GEMINI Development Guidelines](../GEMINI.md)
+- [Agent Guidelines](../AGENTS.md)
