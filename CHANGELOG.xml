@@ -2,8 +2,7 @@
 <root>
     <en-US>
         New:
-        Added a Meter Spacing setting for the floating window, allowing upload and download speed
-        spacing to be adjusted in horizontal layout mode.
+        Added a Meter Spacing setting for the floating window, allowing upload and download speed spacing to be adjusted in horizontal layout mode.
 
         Improvements:
         Updated build toolchain and dependencies for better compatibility and stability.

@@ -10,8 +10,7 @@
 
 ### New Features
 
-- Added a Meter Spacing setting for the floating window, allowing upload and download speed spacing
-  to be adjusted in horizontal layout mode.
+- Added a Meter Spacing setting for the floating window, allowing upload and download speed spacing to be adjusted in horizontal layout mode.
 
 ### Improvements
 
