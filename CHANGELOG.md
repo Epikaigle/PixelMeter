@@ -1,12 +1,18 @@
-## 新增功能 / New Features
+## 新增功能
 
-* **最小显示单位配置 / Minimum Display Unit**
-  * 在设置中新增"最小显示单位"选项，支持在自动单位模式下将低于指定阈值的小流量强制显示为 0，减少数值波动干扰
-  * Added "Minimum Display Unit" setting to suppress small traffic values below a threshold in
-    auto-unit mode, reducing visual noise from fluctuations
+- 新增悬浮窗“网速项间距”设置，可在水平排列模式下调整上行与下行网速之间的距离。
 
-## 优化改进 / Improvements
+## 优化改进
 
-* **悬浮窗布局优化 / Overlay Layout Optimization**
-  * 优化悬浮窗垂直布局显示效果
-  * Improved vertical layout rendering for overlay window
+- 升级构建工具链与依赖。
+
+## English
+
+### New Features
+
+- Added a Meter Spacing setting for the floating window, allowing upload and download speed spacing
+  to be adjusted in horizontal layout mode.
+
+### Improvements
+
+- Updated the build toolchain and dependencies.
