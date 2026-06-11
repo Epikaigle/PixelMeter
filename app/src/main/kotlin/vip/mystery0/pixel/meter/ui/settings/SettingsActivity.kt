@@ -689,7 +689,12 @@ fun AboutSection() {
     Preference(
         title = { Text(stringResource(R.string.settings_pixel_tailor)) },
         summary = { Text(stringResource(R.string.settings_pixel_tailor_desc)) },
-        onClick = { uriHandler.openUri("https://github.com/Pixel-Tailor-CN") }
+        onClick = { uriHandler.openUri("https://pixel.mystery0.app") }
+    )
+    Preference(
+        title = { Text(stringResource(R.string.settings_telegram_channel)) },
+        summary = { Text(stringResource(R.string.settings_telegram_channel_desc)) },
+        onClick = { uriHandler.openUri("https://t.me/pixel_tailor_cn") }
     )
 }
 
