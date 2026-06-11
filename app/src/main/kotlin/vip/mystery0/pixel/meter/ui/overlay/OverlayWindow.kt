@@ -23,6 +23,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -134,7 +135,7 @@ class OverlayWindow(
                     val minSpeedUnit by repository.minSpeedUnit.collectAsState()
                     val context = LocalContext.current
                     val initialConfig = LocalConfiguration.current
-                    var orientation by remember { mutableStateOf(initialConfig.orientation) }
+                    var orientation by remember { mutableIntStateOf(initialConfig.orientation) }
 
                     DisposableEffect(context) {
                         val callbacks = object : ComponentCallbacks {
@@ -142,6 +143,7 @@ class OverlayWindow(
                                 orientation = newConfig.orientation
                             }
 
+                            @Deprecated("Deprecated in Java")
                             override fun onLowMemory() {}
                         }
                         context.applicationContext.registerComponentCallbacks(callbacks)
