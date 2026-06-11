@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="app_name">Pixel Meter</string>
   <string name="title_configuration">Configuração</string>
   <string name="title_monitor_control">Controle do Monitor</string>
   <string name="label_total_speed">Velocidade Total</string>
