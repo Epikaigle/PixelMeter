@@ -318,6 +318,7 @@ fun OverlaySection(viewModel: SettingsViewModel) {
     val isOverlayHideInImmersiveMode by viewModel.isOverlayHideInImmersiveMode.collectAsState(
         initial = false
     )
+    val overlayAutoHideThreshold by viewModel.overlayAutoHideThreshold.collectAsState(initial = 0L)
     val direction by viewModel.overlayDirection.collectAsState(initial = 0)
     val alignment by viewModel.overlayAlignment.collectAsState(initial = 0)
     val meterSpacing by viewModel.overlayMeterSpacing.collectAsState(initial = 8)
@@ -365,6 +366,48 @@ fun OverlaySection(viewModel: SettingsViewModel) {
                 Text(stringResource(R.string.settings_overlay_hide_in_immersive_mode_desc))
             }
         )
+        SliderPreference(
+            value = 0F,
+            onValueChange = { },
+            sliderValue = overlayAutoHideThreshold.toFloat() / 1024,
+            onSliderValueChange = {
+                viewModel.setOverlayAutoHideThreshold((it * 1024).toLong())
+            },
+            valueRange = 0f..1024f,
+            valueSteps = 20,
+            title = { Text(stringResource(R.string.settings_overlay_auto_hide_threshold)) },
+            summary = {
+                if (overlayAutoHideThreshold == 0L) {
+                    Text(stringResource(R.string.settings_overlay_auto_hide_threshold_disabled))
+                } else {
+                    val thresholdStr =
+                        NetworkRepository.formatSpeedLine(overlayAutoHideThreshold)
+                    Text(
+                        stringResource(
+                            R.string.settings_overlay_auto_hide_threshold_desc,
+                            thresholdStr
+                        )
+                    )
+                }
+            },
+            valueText = {
+                Text(NetworkRepository.formatSpeedLine(overlayAutoHideThreshold))
+            }
+        )
+        TextFieldPreference(
+            value = (overlayAutoHideThreshold / 1024).toString(),
+            onValueChange = {
+                val kb = it.toLongOrNull()
+                if (kb != null && kb >= 0) {
+                    viewModel.setOverlayAutoHideThreshold(kb * 1024)
+                }
+            },
+            title = { Text(stringResource(R.string.settings_overlay_auto_hide_threshold_input_title)) },
+            summary = {
+                Text(stringResource(R.string.settings_overlay_auto_hide_threshold_input_summary))
+            },
+            textToValue = { it },
+        )
         SwitchPreference(
             value = isOverlayUseDefaultColors,
             onValueChange = { viewModel.setOverlayUseDefaultColors(it) },
@@ -398,7 +441,7 @@ fun OverlaySection(viewModel: SettingsViewModel) {
             onValueChange = { },
             sliderValue = textSize,
             onSliderValueChange = { viewModel.setOverlayTextSize(it) },
-            valueRange = 8f..24f,
+            valueRange = 7f..24f,
             title = { Text(stringResource(R.string.settings_overlay_text_size)) },
             valueText = { Text("${"%.1f".format(platformLocale, textSize)}sp") }
         )

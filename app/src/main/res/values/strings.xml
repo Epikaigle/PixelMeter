@@ -49,6 +49,11 @@
     <string name="settings_overlay_portrait_only_desc">Do not display floating window when device is in landscape mode</string>
     <string name="settings_overlay_hide_in_immersive_mode">Hide in Immersive Mode</string>
     <string name="settings_overlay_hide_in_immersive_mode_desc">Hide the floating window when the foreground app hides the system bars</string>
+    <string name="settings_overlay_auto_hide_threshold">Auto-hide Threshold</string>
+    <string name="settings_overlay_auto_hide_threshold_desc">Hide the floating window after sustained traffic below %1$s</string>
+    <string name="settings_overlay_auto_hide_threshold_disabled">Auto-hide is disabled</string>
+    <string name="settings_overlay_auto_hide_threshold_input_title">Custom Auto-hide Threshold (KB/s)</string>
+    <string name="settings_overlay_auto_hide_threshold_input_summary">Input the threshold value in KB/s directly. Enter 0 to disable.</string>
     <string name="settings_overlay_use_default_colors">Use Default Colors</string>
     <string name="settings_overlay_use_default_colors_desc">Colors will adapt to system theme (Dark/Light)</string>
     <string name="settings_overlay_bg_color">Background Color</string>

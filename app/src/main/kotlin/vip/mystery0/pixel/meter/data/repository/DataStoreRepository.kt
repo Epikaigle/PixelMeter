@@ -64,6 +64,8 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
         val KEY_OVERLAY_PORTRAIT_ONLY = booleanPreferencesKey("key_overlay_portrait_only")
         val KEY_OVERLAY_HIDE_IN_IMMERSIVE_MODE =
             booleanPreferencesKey("key_overlay_hide_in_immersive_mode")
+        val KEY_OVERLAY_AUTO_HIDE_THRESHOLD =
+            longPreferencesKey("key_overlay_auto_hide_threshold")
     }
 
     val isLiveUpdateEnabled: Flow<Boolean> = dataStore.data
@@ -207,6 +209,11 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
     val notificationColor: Flow<Int> = dataStore.data
         .map { preferences ->
             preferences[KEY_NOTIFICATION_COLOR] ?: 0
+        }
+
+    val overlayAutoHideThreshold: Flow<Long> = dataStore.data
+        .map { preferences ->
+            preferences[KEY_OVERLAY_AUTO_HIDE_THRESHOLD] ?: 0L
         }
 
     suspend fun setLiveUpdateEnabled(enabled: Boolean) {
@@ -369,6 +376,12 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
     suspend fun setNotificationColor(color: Int) {
         dataStore.edit { preferences ->
             preferences[KEY_NOTIFICATION_COLOR] = color
+        }
+    }
+
+    suspend fun setOverlayAutoHideThreshold(threshold: Long) {
+        dataStore.edit { preferences ->
+            preferences[KEY_OVERLAY_AUTO_HIDE_THRESHOLD] = threshold
         }
     }
 

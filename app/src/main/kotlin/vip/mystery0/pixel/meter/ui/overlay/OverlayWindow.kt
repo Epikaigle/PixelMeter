@@ -25,6 +25,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -60,6 +61,10 @@ class OverlayWindow(
     private val repository: NetworkRepository
 ) : LifecycleOwner, ViewModelStoreOwner,
     SavedStateRegistryOwner {
+    private companion object {
+        const val LOW_TRAFFIC_HIDE_SAMPLE_COUNT = 3
+    }
+
     private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     private var view: View? = null
     private var params: WindowManager.LayoutParams? = null
@@ -69,6 +74,7 @@ class OverlayWindow(
     private var store = ViewModelStore()
 
     private var speedState by mutableStateOf(NetSpeedData(0, 0))
+    private var speedUpdateVersion by mutableLongStateOf(0L)
 
     override val lifecycle: Lifecycle get() = lifecycleRegistry
     override val viewModelStore: ViewModelStore get() = store
@@ -133,6 +139,8 @@ class OverlayWindow(
                     val isOverlayPortraitOnly by repository.isOverlayPortraitOnly.collectAsState()
                     val isOverlayHideInImmersiveMode by repository.isOverlayHideInImmersiveMode
                         .collectAsState()
+                    val overlayAutoHideThreshold by repository.overlayAutoHideThreshold
+                        .collectAsState()
                     val isOverlayUseDefaultColors by repository.isOverlayUseDefaultColors.collectAsState()
                     val speedUnit by repository.speedUnit.collectAsState()
                     val minSpeedUnit by repository.minSpeedUnit.collectAsState()
@@ -140,6 +148,7 @@ class OverlayWindow(
                     val initialConfig = LocalConfiguration.current
                     var orientation by remember { mutableIntStateOf(initialConfig.orientation) }
                     var areSystemBarsVisible by remember { mutableStateOf(true) }
+                    var lowTrafficSamples by remember { mutableIntStateOf(0) }
 
                     DisposableEffect(context) {
                         val callbacks = object : ComponentCallbacks {
@@ -220,8 +229,24 @@ class OverlayWindow(
                                 orientation == Configuration.ORIENTATION_LANDSCAPE
                     val shouldHideForImmersiveMode =
                         isOverlayHideInImmersiveMode && !areSystemBarsVisible
+                    LaunchedEffect(speedUpdateVersion, overlayAutoHideThreshold) {
+                        lowTrafficSamples = when {
+                            speedUpdateVersion == 0L -> 0
+                            overlayAutoHideThreshold <= 0L -> 0
+                            speedState.totalSpeed < overlayAutoHideThreshold ->
+                                (lowTrafficSamples + 1)
+                                    .coerceAtMost(LOW_TRAFFIC_HIDE_SAMPLE_COUNT)
 
-                    val shouldHideOverlay = shouldHideForLandscape || shouldHideForImmersiveMode
+                            else -> 0
+                        }
+                    }
+                    val shouldHideForLowTraffic =
+                        overlayAutoHideThreshold > 0L &&
+                                lowTrafficSamples >= LOW_TRAFFIC_HIDE_SAMPLE_COUNT
+
+                    val shouldHideOverlay =
+                        shouldHideForLandscape || shouldHideForImmersiveMode ||
+                                shouldHideForLowTraffic
                     LaunchedEffect(shouldHideOverlay) {
                         // 根 ComposeView 必须保持挂载并接收 WindowInsets，否则系统栏恢复时无法重新显示。
                         composeView.visibility = View.VISIBLE
@@ -284,6 +309,7 @@ class OverlayWindow(
 
     fun update(speed: NetSpeedData) {
         speedState = speed
+        speedUpdateVersion++
     }
 
     fun hide() {

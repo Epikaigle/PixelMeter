@@ -48,6 +48,11 @@
     <string name="settings_overlay_portrait_only_desc">在横屏模式下自动隐藏悬浮窗</string>
     <string name="settings_overlay_hide_in_immersive_mode">沉浸模式下隐藏</string>
     <string name="settings_overlay_hide_in_immersive_mode_desc">当前台应用隐藏系统状态栏和导航栏时，自动隐藏悬浮窗</string>
+    <string name="settings_overlay_auto_hide_threshold">自动隐藏阈值</string>
+    <string name="settings_overlay_auto_hide_threshold_desc">网速持续低于 %1$s 后隐藏悬浮窗</string>
+    <string name="settings_overlay_auto_hide_threshold_disabled">自动隐藏已禁用</string>
+    <string name="settings_overlay_auto_hide_threshold_input_title">自定义隐藏阈值 (KB/s)</string>
+    <string name="settings_overlay_auto_hide_threshold_input_summary">直接输入阈值数值，单位为 KB/s。输入 0 可禁用。</string>
     <string name="settings_overlay_use_default_colors">使用默认颜色</string>
     <string name="settings_overlay_use_default_colors_desc">悬浮窗颜色跟随系统主题（深色/浅色）自动调整</string>
     <string name="settings_overlay_bg_color">背景颜色</string>
