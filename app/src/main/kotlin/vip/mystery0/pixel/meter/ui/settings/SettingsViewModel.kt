@@ -33,10 +33,14 @@ class SettingsViewModel(
     val overlayBgColor = repository.overlayBgColor
     val overlayTextColor = repository.overlayTextColor
     val overlayCornerRadius = repository.overlayCornerRadius
+    val overlayPadding = repository.overlayPadding
     val overlayTextSize = repository.overlayTextSize
     val overlayTextUp = repository.overlayTextUp
     val overlayTextDown = repository.overlayTextDown
     val overlayOrderUpFirst = repository.overlayOrderUpFirst
+    val isOverlayHideBackground = repository.isOverlayHideBackground
+    val overlayX = repository.overlayX
+    val overlayY = repository.overlayY
     val overlayDirection = repository.overlayDirection
     val overlayAlignment = repository.overlayAlignment
     val overlayMeterSpacing = repository.overlayMeterSpacing
@@ -116,10 +120,15 @@ class SettingsViewModel(
     fun setOverlayBgColor(color: Int) = repository.setOverlayBgColor(color)
     fun setOverlayTextColor(color: Int) = repository.setOverlayTextColor(color)
     fun setOverlayCornerRadius(radius: Int) = repository.setOverlayCornerRadius(radius)
+    fun setOverlayPadding(padding: Int) = repository.setOverlayPadding(padding)
     fun setOverlayTextSize(size: Float) = repository.setOverlayTextSize(size)
     fun setOverlayTextUp(text: String) = repository.setOverlayTextUp(text)
     fun setOverlayTextDown(text: String) = repository.setOverlayTextDown(text)
     fun setOverlayOrderUpFirst(upFirst: Boolean) = repository.setOverlayOrderUpFirst(upFirst)
+    fun setOverlayHideBackground(hideBackground: Boolean) =
+        repository.setOverlayHideBackground(hideBackground)
+
+    fun setOverlayPosition(x: Int, y: Int) = repository.saveOverlayPosition(x, y)
     fun setOverlayDirection(direction: Int) = repository.setOverlayDirection(direction)
     fun setOverlayAlignment(alignment: Int) = repository.setOverlayAlignment(alignment)
     fun setOverlayMeterSpacing(spacing: Int) = repository.setOverlayMeterSpacing(spacing)

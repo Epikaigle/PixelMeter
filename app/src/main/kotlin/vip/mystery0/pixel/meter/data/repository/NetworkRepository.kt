@@ -55,6 +55,9 @@ class NetworkRepository(
     private val _overlayCornerRadius = MutableStateFlow(8)
     val overlayCornerRadius: StateFlow<Int> = _overlayCornerRadius.asStateFlow()
 
+    private val _overlayPadding = MutableStateFlow(8)
+    val overlayPadding: StateFlow<Int> = _overlayPadding.asStateFlow()
+
     private val _overlayTextSize = MutableStateFlow(10f)
     val overlayTextSize: StateFlow<Float> = _overlayTextSize.asStateFlow()
 
@@ -66,6 +69,15 @@ class NetworkRepository(
 
     private val _overlayOrderUpFirst = MutableStateFlow(true)
     val overlayOrderUpFirst: StateFlow<Boolean> = _overlayOrderUpFirst.asStateFlow()
+
+    private val _isOverlayHideBackground = MutableStateFlow(false)
+    val isOverlayHideBackground: StateFlow<Boolean> = _isOverlayHideBackground.asStateFlow()
+
+    private val _overlayX = MutableStateFlow(100)
+    val overlayX: StateFlow<Int> = _overlayX.asStateFlow()
+
+    private val _overlayY = MutableStateFlow(200)
+    val overlayY: StateFlow<Int> = _overlayY.asStateFlow()
 
     private val _overlayDirection = MutableStateFlow(0)
     val overlayDirection: StateFlow<Int> = _overlayDirection.asStateFlow()
@@ -156,11 +168,16 @@ class NetworkRepository(
                     prefs[DataStoreRepository.KEY_OVERLAY_TEXT_COLOR] ?: 0xFFFFFFFF.toInt()
                 _overlayCornerRadius.value =
                     prefs[DataStoreRepository.KEY_OVERLAY_CORNER_RADIUS] ?: 8
+                _overlayPadding.value = prefs[DataStoreRepository.KEY_OVERLAY_PADDING] ?: 8
                 _overlayTextSize.value = prefs[DataStoreRepository.KEY_OVERLAY_TEXT_SIZE] ?: 10f
                 _overlayTextUp.value = prefs[DataStoreRepository.KEY_OVERLAY_TEXT_UP] ?: "▲ "
                 _overlayTextDown.value = prefs[DataStoreRepository.KEY_OVERLAY_TEXT_DOWN] ?: "▼ "
                 _overlayOrderUpFirst.value =
                     prefs[DataStoreRepository.KEY_OVERLAY_ORDER_UP_FIRST] ?: true
+                _isOverlayHideBackground.value =
+                    prefs[DataStoreRepository.KEY_OVERLAY_HIDE_BACKGROUND] ?: false
+                _overlayX.value = prefs[DataStoreRepository.KEY_OVERLAY_X] ?: 100
+                _overlayY.value = prefs[DataStoreRepository.KEY_OVERLAY_Y] ?: 200
                 _overlayDirection.value =
                     prefs[DataStoreRepository.KEY_OVERLAY_DIRECTION] ?: 0
                 _overlayAlignment.value =
@@ -231,6 +248,9 @@ class NetworkRepository(
             dataStoreRepository.overlayCornerRadius.collect { _overlayCornerRadius.value = it }
         }
         scope.launch {
+            dataStoreRepository.overlayPadding.collect { _overlayPadding.value = it }
+        }
+        scope.launch {
             dataStoreRepository.overlayTextSize.collect { _overlayTextSize.value = it }
         }
         scope.launch {
@@ -241,6 +261,17 @@ class NetworkRepository(
         }
         scope.launch {
             dataStoreRepository.overlayOrderUpFirst.collect { _overlayOrderUpFirst.value = it }
+        }
+        scope.launch {
+            dataStoreRepository.isOverlayHideBackground.collect {
+                _isOverlayHideBackground.value = it
+            }
+        }
+        scope.launch {
+            dataStoreRepository.overlayX.collect { _overlayX.value = it }
+        }
+        scope.launch {
+            dataStoreRepository.overlayY.collect { _overlayY.value = it }
         }
         scope.launch {
             dataStoreRepository.overlayDirection.collect { _overlayDirection.value = it }
@@ -373,6 +404,10 @@ class NetworkRepository(
         scope.launch { dataStoreRepository.setOverlayCornerRadius(radius) }
     }
 
+    fun setOverlayPadding(padding: Int) {
+        scope.launch { dataStoreRepository.setOverlayPadding(padding) }
+    }
+
     fun setOverlayTextSize(size: Float) {
         scope.launch { dataStoreRepository.setOverlayTextSize(size) }
     }
@@ -387,6 +422,10 @@ class NetworkRepository(
 
     fun setOverlayOrderUpFirst(upFirst: Boolean) {
         scope.launch { dataStoreRepository.setOverlayOrderUpFirst(upFirst) }
+    }
+
+    fun setOverlayHideBackground(hideBackground: Boolean) {
+        scope.launch { dataStoreRepository.setOverlayHideBackground(hideBackground) }
     }
 
     fun setOverlayDirection(direction: Int) {

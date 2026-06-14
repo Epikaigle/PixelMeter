@@ -310,10 +310,14 @@ fun OverlaySection(viewModel: SettingsViewModel) {
     val bgColor by viewModel.overlayBgColor.collectAsState(initial = 0)
     val textColor by viewModel.overlayTextColor.collectAsState(initial = 0)
     val cornerRadius by viewModel.overlayCornerRadius.collectAsState(initial = 8)
+    val padding by viewModel.overlayPadding.collectAsState(initial = 8)
     val textSize by viewModel.overlayTextSize.collectAsState(initial = 10f)
     val textUp by viewModel.overlayTextUp.collectAsState(initial = "▲ ")
     val textDown by viewModel.overlayTextDown.collectAsState(initial = "▼ ")
     val upFirst by viewModel.overlayOrderUpFirst.collectAsState(initial = true)
+    val isOverlayHideBackground by viewModel.isOverlayHideBackground.collectAsState(initial = false)
+    val overlayX by viewModel.overlayX.collectAsState(initial = 100)
+    val overlayY by viewModel.overlayY.collectAsState(initial = 200)
     val isOverlayPortraitOnly by viewModel.isOverlayPortraitOnly.collectAsState(initial = false)
     val isOverlayHideInImmersiveMode by viewModel.isOverlayHideInImmersiveMode.collectAsState(
         initial = false
@@ -351,6 +355,30 @@ fun OverlaySection(viewModel: SettingsViewModel) {
             onValueChange = { viewModel.setOverlayShowOnStatusBar(it) },
             title = { Text(stringResource(R.string.settings_overlay_show_on_status_bar)) },
             summary = { Text(stringResource(R.string.settings_overlay_show_on_status_bar_desc)) }
+        )
+        TextFieldPreference(
+            value = overlayX.toString(),
+            onValueChange = {
+                val x = it.toIntOrNull()
+                if (x != null) {
+                    viewModel.setOverlayPosition(x, overlayY)
+                }
+            },
+            title = { Text(stringResource(R.string.settings_overlay_position_x)) },
+            summary = { Text(stringResource(R.string.settings_overlay_position_x_desc)) },
+            textToValue = { it },
+        )
+        TextFieldPreference(
+            value = overlayY.toString(),
+            onValueChange = {
+                val y = it.toIntOrNull()
+                if (y != null) {
+                    viewModel.setOverlayPosition(overlayX, y)
+                }
+            },
+            title = { Text(stringResource(R.string.settings_overlay_position_y)) },
+            summary = { Text(stringResource(R.string.settings_overlay_position_y_desc)) },
+            textToValue = { it },
         )
         SwitchPreference(
             value = isOverlayPortraitOnly,
@@ -414,10 +442,16 @@ fun OverlaySection(viewModel: SettingsViewModel) {
             title = { Text(stringResource(R.string.settings_overlay_use_default_colors)) },
             summary = { Text(stringResource(R.string.settings_overlay_use_default_colors_desc)) }
         )
+        SwitchPreference(
+            value = isOverlayHideBackground,
+            onValueChange = { viewModel.setOverlayHideBackground(it) },
+            title = { Text(stringResource(R.string.settings_overlay_hide_background)) },
+            summary = { Text(stringResource(R.string.settings_overlay_hide_background_desc)) }
+        )
         ColorPreference(
             title = stringResource(R.string.settings_overlay_bg_color),
             color = Color(bgColor),
-            enabled = !isOverlayUseDefaultColors,
+            enabled = !isOverlayUseDefaultColors && !isOverlayHideBackground,
             onColorSelected = { viewModel.setOverlayBgColor(it.toArgb()) }
         )
         ColorPreference(
@@ -435,6 +469,16 @@ fun OverlaySection(viewModel: SettingsViewModel) {
             valueSteps = 32,
             title = { Text(stringResource(R.string.settings_overlay_corner_radius)) },
             valueText = { Text("${cornerRadius}dp") }
+        )
+        SliderPreference(
+            value = 0F,
+            onValueChange = { },
+            sliderValue = padding.toFloat(),
+            onSliderValueChange = { viewModel.setOverlayPadding(it.toInt()) },
+            valueRange = 0f..24f,
+            valueSteps = 24,
+            title = { Text(stringResource(R.string.settings_overlay_padding)) },
+            valueText = { Text("${padding}dp") }
         )
         SliderPreference(
             value = 0F,

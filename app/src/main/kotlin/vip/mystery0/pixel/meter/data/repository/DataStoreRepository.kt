@@ -35,10 +35,12 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
         val KEY_OVERLAY_BG_COLOR = intPreferencesKey("key_overlay_bg_color")
         val KEY_OVERLAY_TEXT_COLOR = intPreferencesKey("key_overlay_text_color")
         val KEY_OVERLAY_CORNER_RADIUS = intPreferencesKey("key_overlay_corner_radius")
+        val KEY_OVERLAY_PADDING = intPreferencesKey("key_overlay_padding")
         val KEY_OVERLAY_TEXT_SIZE = floatPreferencesKey("key_overlay_text_size")
         val KEY_OVERLAY_TEXT_UP = stringPreferencesKey("key_overlay_text_up")
         val KEY_OVERLAY_TEXT_DOWN = stringPreferencesKey("key_overlay_text_down")
         val KEY_OVERLAY_ORDER_UP_FIRST = booleanPreferencesKey("key_overlay_order_up_first")
+        val KEY_OVERLAY_HIDE_BACKGROUND = booleanPreferencesKey("key_overlay_hide_background")
         val KEY_NOTIFICATION_TEXT_UP = stringPreferencesKey("key_notification_text_up")
         val KEY_NOTIFICATION_TEXT_DOWN = stringPreferencesKey("key_notification_text_down")
         val KEY_NOTIFICATION_ORDER_UP_FIRST =
@@ -126,6 +128,11 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
             preferences[KEY_OVERLAY_CORNER_RADIUS] ?: 8
         }
 
+    val overlayPadding: Flow<Int> = dataStore.data
+        .map { preferences ->
+            preferences[KEY_OVERLAY_PADDING] ?: 8
+        }
+
     val overlayTextSize: Flow<Float> = dataStore.data
         .map { preferences ->
             preferences[KEY_OVERLAY_TEXT_SIZE] ?: 10f
@@ -144,6 +151,11 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
     val overlayOrderUpFirst: Flow<Boolean> = dataStore.data
         .map { preferences ->
             preferences[KEY_OVERLAY_ORDER_UP_FIRST] ?: true // Default TRUE as requested
+        }
+
+    val isOverlayHideBackground: Flow<Boolean> = dataStore.data
+        .map { preferences ->
+            preferences[KEY_OVERLAY_HIDE_BACKGROUND] ?: false
         }
 
     val overlayDirection: Flow<Int> = dataStore.data
@@ -277,6 +289,12 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
         }
     }
 
+    suspend fun setOverlayPadding(padding: Int) {
+        dataStore.edit { preferences ->
+            preferences[KEY_OVERLAY_PADDING] = padding
+        }
+    }
+
     suspend fun setOverlayTextSize(size: Float) {
         dataStore.edit { preferences ->
             preferences[KEY_OVERLAY_TEXT_SIZE] = size
@@ -298,6 +316,12 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
     suspend fun setOverlayOrderUpFirst(upFirst: Boolean) {
         dataStore.edit { preferences ->
             preferences[KEY_OVERLAY_ORDER_UP_FIRST] = upFirst
+        }
+    }
+
+    suspend fun setOverlayHideBackground(hideBackground: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[KEY_OVERLAY_HIDE_BACKGROUND] = hideBackground
         }
     }
 

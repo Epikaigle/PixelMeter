@@ -129,10 +129,15 @@ class OverlayWindow(
                     val bgColor by repository.overlayBgColor.collectAsState()
                     val textColor by repository.overlayTextColor.collectAsState()
                     val cornerRadius by repository.overlayCornerRadius.collectAsState()
+                    val padding by repository.overlayPadding.collectAsState()
                     val textSize by repository.overlayTextSize.collectAsState()
                     val textUp by repository.overlayTextUp.collectAsState()
                     val textDown by repository.overlayTextDown.collectAsState()
                     val upFirst by repository.overlayOrderUpFirst.collectAsState()
+                    val isOverlayHideBackground by repository.isOverlayHideBackground
+                        .collectAsState()
+                    val overlayX by repository.overlayX.collectAsState()
+                    val overlayY by repository.overlayY.collectAsState()
                     val direction by repository.overlayDirection.collectAsState()
                     val alignment by repository.overlayAlignment.collectAsState()
                     val meterSpacing by repository.overlayMeterSpacing.collectAsState()
@@ -224,6 +229,16 @@ class OverlayWindow(
                         }
                     }
 
+                    LaunchedEffect(overlayX, overlayY) {
+                        params?.let { p ->
+                            if (p.x != overlayX || p.y != overlayY) {
+                                p.x = overlayX
+                                p.y = overlayY
+                                windowManager.updateViewLayout(composeView, p)
+                            }
+                        }
+                    }
+
                     val shouldHideForLandscape =
                         isOverlayPortraitOnly &&
                                 orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -271,9 +286,11 @@ class OverlayWindow(
                     OverlayContent(
                         speed = speedState,
                         useDefaultColors = isOverlayUseDefaultColors,
+                        hideBackground = isOverlayHideBackground,
                         bgColor = bgColor,
                         textColor = textColor,
                         cornerRadius = cornerRadius,
+                        padding = padding,
                         textSize = textSize,
                         textUp = textUp,
                         textDown = textDown,
@@ -332,9 +349,11 @@ class OverlayWindow(
 fun OverlayContent(
     speed: NetSpeedData,
     useDefaultColors: Boolean,
+    hideBackground: Boolean,
     bgColor: Int,
     textColor: Int,
     cornerRadius: Int,
+    padding: Int,
     textSize: Float,
     textUp: String,
     textDown: String,
@@ -349,7 +368,11 @@ fun OverlayContent(
 ) {
     Surface(
         shape = RoundedCornerShape(cornerRadius.dp),
-        color = if (useDefaultColors) MaterialTheme.colorScheme.surface else Color(bgColor),
+        color = when {
+            hideBackground -> Color.Transparent
+            useDefaultColors -> MaterialTheme.colorScheme.surface
+            else -> Color(bgColor)
+        },
         modifier = Modifier.pointerInput(Unit) {
             detectDragGestures(
                 onDrag = { change, dragAmount ->
@@ -377,7 +400,10 @@ fun OverlayContent(
             val effectiveMeterSpacing = meterSpacing.coerceAtLeast(0)
             // Horizontal
             Row(
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                modifier = Modifier.padding(
+                    horizontal = padding.coerceAtLeast(0).dp,
+                    vertical = (padding / 2).coerceAtLeast(0).dp
+                ),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
@@ -404,7 +430,10 @@ fun OverlayContent(
                 else -> Alignment.Start
             }
             Row(
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                modifier = Modifier.padding(
+                    horizontal = padding.coerceAtLeast(0).dp,
+                    vertical = (padding / 2).coerceAtLeast(0).dp
+                ),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(
