@@ -2,16 +2,18 @@
 <root>
     <en-US>
         New:
-        Added a Meter Spacing setting for the floating window, allowing upload and download speed spacing to be adjusted in horizontal layout mode.
+        - Overlay can hide in immersive mode, after 3 low-traffic samples below a custom threshold.
+        - Added X/Y position, transparent background, and padding controls.
 
         Improvements:
-        Updated build toolchain and dependencies for better compatibility and stability.
+        - Settings now use five pages, phone navigation, and large-screen two-pane layout.
     </en-US>
     <zh-CN>
         新增：
-        悬浮窗新增“网速项间距”设置，可在水平排列模式下调整上行与下行网速之间的距离。
+        - 悬浮窗支持沉浸模式隐藏，连续 3 个采样周期低于阈值后的低流量自动隐藏。
+        - 新增 X/Y 坐标输入、隐藏背景、背景内边距设置。
 
         优化：
-        升级构建工具链与依赖，提升兼容性与稳定性。
+        - 设置页拆分为常规、通知、悬浮窗、后台、关于，手机端使用二级导航，大屏使用双栏布局。
     </zh-CN>
 </root>
