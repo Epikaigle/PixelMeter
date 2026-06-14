@@ -44,6 +44,8 @@
   <string name="settings_overlay_show_on_status_bar_desc">Permitir que a janela flutuante seja arrastada sobre a barra de status e a área do buraco da câmera</string>
   <string name="settings_overlay_portrait_only">Ocultar no Modo Paisagem</string>
   <string name="settings_overlay_portrait_only_desc">Não exibir a janela flutuante quando o dispositivo estiver no modo paisagem</string>
+    <string name="settings_overlay_hide_in_immersive_mode">Ocultar no Modo Imersivo</string>
+    <string name="settings_overlay_hide_in_immersive_mode_desc">Ocultar a janela flutuante quando o app em primeiro plano ocultar as barras do sistema</string>
   <string name="settings_overlay_use_default_colors">Usar Cores Padrão</string>
   <string name="settings_overlay_use_default_colors_desc">As cores se adaptarão ao tema do sistema (Escuro/Claro)</string>
   <string name="settings_overlay_bg_color">Cor do Fundo</string>

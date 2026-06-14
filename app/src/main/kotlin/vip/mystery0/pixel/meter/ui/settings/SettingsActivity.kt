@@ -45,6 +45,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -70,7 +71,6 @@ import vip.mystery0.pixel.meter.BuildConfig
 import vip.mystery0.pixel.meter.R
 import vip.mystery0.pixel.meter.data.repository.NetworkRepository
 import vip.mystery0.pixel.meter.ui.theme.PixelPulseTheme
-import java.util.Locale
 
 class SettingsActivity : ComponentActivity() {
     private val viewModel by viewModels<SettingsViewModel>()
@@ -315,9 +315,13 @@ fun OverlaySection(viewModel: SettingsViewModel) {
     val textDown by viewModel.overlayTextDown.collectAsState(initial = "▼ ")
     val upFirst by viewModel.overlayOrderUpFirst.collectAsState(initial = true)
     val isOverlayPortraitOnly by viewModel.isOverlayPortraitOnly.collectAsState(initial = false)
+    val isOverlayHideInImmersiveMode by viewModel.isOverlayHideInImmersiveMode.collectAsState(
+        initial = false
+    )
     val direction by viewModel.overlayDirection.collectAsState(initial = 0)
     val alignment by viewModel.overlayAlignment.collectAsState(initial = 0)
     val meterSpacing by viewModel.overlayMeterSpacing.collectAsState(initial = 8)
+    val platformLocale = LocalLocale.current.platformLocale
 
     PreferenceCategory(title = { Text(stringResource(R.string.settings_category_overlay)) })
     val isSwitchEnabled = !isServiceRunning || canOverlay
@@ -354,6 +358,14 @@ fun OverlaySection(viewModel: SettingsViewModel) {
             summary = { Text(stringResource(R.string.settings_overlay_portrait_only_desc)) }
         )
         SwitchPreference(
+            value = isOverlayHideInImmersiveMode,
+            onValueChange = { viewModel.setOverlayHideInImmersiveMode(it) },
+            title = { Text(stringResource(R.string.settings_overlay_hide_in_immersive_mode)) },
+            summary = {
+                Text(stringResource(R.string.settings_overlay_hide_in_immersive_mode_desc))
+            }
+        )
+        SwitchPreference(
             value = isOverlayUseDefaultColors,
             onValueChange = { viewModel.setOverlayUseDefaultColors(it) },
             title = { Text(stringResource(R.string.settings_overlay_use_default_colors)) },
@@ -388,7 +400,7 @@ fun OverlaySection(viewModel: SettingsViewModel) {
             onSliderValueChange = { viewModel.setOverlayTextSize(it) },
             valueRange = 8f..24f,
             title = { Text(stringResource(R.string.settings_overlay_text_size)) },
-            valueText = { Text("${"%.1f".format(Locale.getDefault(), textSize)}sp") }
+            valueText = { Text("${"%.1f".format(platformLocale, textSize)}sp") }
         )
         TextFieldPreference(
             value = textUp,

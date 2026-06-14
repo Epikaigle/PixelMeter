@@ -79,6 +79,10 @@ class NetworkRepository(
     private val _isOverlayPortraitOnly = MutableStateFlow(false)
     val isOverlayPortraitOnly: StateFlow<Boolean> = _isOverlayPortraitOnly.asStateFlow()
 
+    private val _isOverlayHideInImmersiveMode = MutableStateFlow(false)
+    val isOverlayHideInImmersiveMode: StateFlow<Boolean> =
+        _isOverlayHideInImmersiveMode.asStateFlow()
+
     private val _notificationTextUp = MutableStateFlow("▲ ")
     val notificationTextUp: StateFlow<String> = _notificationTextUp.asStateFlow()
 
@@ -162,6 +166,8 @@ class NetworkRepository(
                     prefs[DataStoreRepository.KEY_OVERLAY_METER_SPACING] ?: 8
                 _isOverlayPortraitOnly.value =
                     prefs[DataStoreRepository.KEY_OVERLAY_PORTRAIT_ONLY] ?: false
+                _isOverlayHideInImmersiveMode.value =
+                    prefs[DataStoreRepository.KEY_OVERLAY_HIDE_IN_IMMERSIVE_MODE] ?: false
                 _notificationTextUp.value =
                     prefs[DataStoreRepository.KEY_NOTIFICATION_TEXT_UP] ?: "▲ "
                 _notificationTextDown.value =
@@ -242,6 +248,11 @@ class NetworkRepository(
         }
         scope.launch {
             dataStoreRepository.isOverlayPortraitOnly.collect { _isOverlayPortraitOnly.value = it }
+        }
+        scope.launch {
+            dataStoreRepository.isOverlayHideInImmersiveMode.collect {
+                _isOverlayHideInImmersiveMode.value = it
+            }
         }
         scope.launch {
             dataStoreRepository.notificationTextUp.collect { _notificationTextUp.value = it }
@@ -382,6 +393,12 @@ class NetworkRepository(
 
     fun setOverlayPortraitOnly(portraitOnly: Boolean) {
         scope.launch { dataStoreRepository.setOverlayPortraitOnly(portraitOnly) }
+    }
+
+    fun setOverlayHideInImmersiveMode(hideInImmersiveMode: Boolean) {
+        scope.launch {
+            dataStoreRepository.setOverlayHideInImmersiveMode(hideInImmersiveMode)
+        }
     }
 
     fun setNotificationTextUp(text: String) {

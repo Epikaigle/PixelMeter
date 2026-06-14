@@ -43,6 +43,7 @@ class SettingsViewModel(
     val isOverlayLocked = repository.isOverlayLocked
     val isOverlayShowOnStatusBar = repository.isOverlayShowOnStatusBar
     val isOverlayPortraitOnly = repository.isOverlayPortraitOnly
+    val isOverlayHideInImmersiveMode = repository.isOverlayHideInImmersiveMode
 
     // Notification Settings
     val isNotificationEnabled = repository.isNotificationEnabled
@@ -104,6 +105,8 @@ class SettingsViewModel(
     fun setOverlayShowOnStatusBar(show: Boolean) = repository.setOverlayShowOnStatusBar(show)
     fun setOverlayPortraitOnly(portraitOnly: Boolean) =
         repository.setOverlayPortraitOnly(portraitOnly)
+    fun setOverlayHideInImmersiveMode(hideInImmersiveMode: Boolean) =
+        repository.setOverlayHideInImmersiveMode(hideInImmersiveMode)
 
     fun setSamplingInterval(interval: Long) = repository.setSamplingInterval(interval)
     fun setHideFromRecents(hide: Boolean) = repository.setHideFromRecents(hide)

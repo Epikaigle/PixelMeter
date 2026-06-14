@@ -7,6 +7,7 @@ import android.graphics.PixelFormat
 import android.util.Log
 import android.view.Gravity
 import android.view.View
+import android.view.WindowInsets
 import android.view.WindowManager
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Column
@@ -130,12 +131,15 @@ class OverlayWindow(
                     val alignment by repository.overlayAlignment.collectAsState()
                     val meterSpacing by repository.overlayMeterSpacing.collectAsState()
                     val isOverlayPortraitOnly by repository.isOverlayPortraitOnly.collectAsState()
+                    val isOverlayHideInImmersiveMode by repository.isOverlayHideInImmersiveMode
+                        .collectAsState()
                     val isOverlayUseDefaultColors by repository.isOverlayUseDefaultColors.collectAsState()
                     val speedUnit by repository.speedUnit.collectAsState()
                     val minSpeedUnit by repository.minSpeedUnit.collectAsState()
                     val context = LocalContext.current
                     val initialConfig = LocalConfiguration.current
                     var orientation by remember { mutableIntStateOf(initialConfig.orientation) }
+                    var areSystemBarsVisible by remember { mutableStateOf(true) }
 
                     DisposableEffect(context) {
                         val callbacks = object : ComponentCallbacks {
@@ -149,6 +153,33 @@ class OverlayWindow(
                         context.applicationContext.registerComponentCallbacks(callbacks)
                         onDispose {
                             context.applicationContext.unregisterComponentCallbacks(callbacks)
+                        }
+                    }
+
+                    DisposableEffect(composeView) {
+                        val insetsListener = View.OnApplyWindowInsetsListener { _, insets ->
+                            areSystemBarsVisible =
+                                insets.isVisible(WindowInsets.Type.statusBars()) ||
+                                        insets.isVisible(WindowInsets.Type.navigationBars())
+                            insets
+                        }
+                        val attachListener = object : View.OnAttachStateChangeListener {
+                            override fun onViewAttachedToWindow(view: View) {
+                                view.requestApplyInsets()
+                                view.removeOnAttachStateChangeListener(this)
+                            }
+
+                            override fun onViewDetachedFromWindow(view: View) = Unit
+                        }
+                        composeView.setOnApplyWindowInsetsListener(insetsListener)
+                        if (composeView.isAttachedToWindow) {
+                            composeView.requestApplyInsets()
+                        } else {
+                            composeView.addOnAttachStateChangeListener(attachListener)
+                        }
+                        onDispose {
+                            composeView.setOnApplyWindowInsetsListener(null)
+                            composeView.removeOnAttachStateChangeListener(attachListener)
                         }
                     }
 
@@ -184,11 +215,31 @@ class OverlayWindow(
                         }
                     }
 
-                    LaunchedEffect(isOverlayPortraitOnly, orientation) {
-                        if (isOverlayPortraitOnly && orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                            composeView.visibility = View.GONE
-                        } else {
-                            composeView.visibility = View.VISIBLE
+                    val shouldHideForLandscape =
+                        isOverlayPortraitOnly &&
+                                orientation == Configuration.ORIENTATION_LANDSCAPE
+                    val shouldHideForImmersiveMode =
+                        isOverlayHideInImmersiveMode && !areSystemBarsVisible
+
+                    val shouldHideOverlay = shouldHideForLandscape || shouldHideForImmersiveMode
+                    LaunchedEffect(shouldHideOverlay) {
+                        // 根 ComposeView 必须保持挂载并接收 WindowInsets，否则系统栏恢复时无法重新显示。
+                        composeView.visibility = View.VISIBLE
+                        composeView.alpha = if (shouldHideOverlay) 0f else 1f
+
+                        params?.let { p ->
+                            val isNotTouchable =
+                                (p.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE) != 0
+                            val shouldUpdateTouchFlag =
+                                shouldHideOverlay != isNotTouchable
+                            if (shouldUpdateTouchFlag) {
+                                p.flags = if (shouldHideOverlay) {
+                                    p.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+                                } else {
+                                    p.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
+                                }
+                                windowManager.updateViewLayout(composeView, p)
+                            }
                         }
                     }
 

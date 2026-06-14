@@ -62,6 +62,8 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
         val KEY_OVERLAY_ALIGNMENT = intPreferencesKey("key_overlay_alignment")
         val KEY_OVERLAY_METER_SPACING = intPreferencesKey("key_overlay_meter_spacing")
         val KEY_OVERLAY_PORTRAIT_ONLY = booleanPreferencesKey("key_overlay_portrait_only")
+        val KEY_OVERLAY_HIDE_IN_IMMERSIVE_MODE =
+            booleanPreferencesKey("key_overlay_hide_in_immersive_mode")
     }
 
     val isLiveUpdateEnabled: Flow<Boolean> = dataStore.data
@@ -433,6 +435,17 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
     suspend fun setOverlayPortraitOnly(portraitOnly: Boolean) {
         dataStore.edit { preferences ->
             preferences[KEY_OVERLAY_PORTRAIT_ONLY] = portraitOnly
+        }
+    }
+
+    val isOverlayHideInImmersiveMode: Flow<Boolean> = dataStore.data
+        .map { preferences ->
+            preferences[KEY_OVERLAY_HIDE_IN_IMMERSIVE_MODE] ?: false
+        }
+
+    suspend fun setOverlayHideInImmersiveMode(hideInImmersiveMode: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[KEY_OVERLAY_HIDE_IN_IMMERSIVE_MODE] = hideInImmersiveMode
         }
     }
 }
