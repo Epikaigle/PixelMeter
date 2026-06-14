@@ -21,6 +21,7 @@
   <string name="action_speed_test">Teste de Velocidade</string>
   <string name="desc_speed_test">Execute um teste de velocidade usando o Cloudflare</string>
   <string name="title_settings">Configurações</string>
+  <string name="settings_selected_page">Página atual</string>
   <string name="settings_category_general">Configurações Gerais</string>
   <string name="settings_sampling_interval">Intervalo de Amostragem</string>
   <string name="settings_sampling_interval_desc">Intervalos menores reduzem a precisão; intervalos maiores são mais precisos, mas atualizam mais lentamente.</string>

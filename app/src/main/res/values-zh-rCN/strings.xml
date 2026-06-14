@@ -23,6 +23,7 @@
     <string name="desc_speed_test">使用 Cloudflare 进行测速</string>
 
     <string name="title_settings">设置</string>
+    <string name="settings_selected_page">当前页面</string>
     <string name="settings_category_general">常规设置</string>
     <string name="settings_sampling_interval">数据采样间隔时间</string>
     <string name="settings_sampling_interval_desc">过低的间隔时间会导致结果准确度降低，过高的间隔时间结果更准确，但是更新的很慢</string>

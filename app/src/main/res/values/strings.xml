@@ -24,6 +24,7 @@
     <string name="desc_speed_test">Run a speed test using Cloudflare</string>
 
     <string name="title_settings">Settings</string>
+    <string name="settings_selected_page">Selected</string>
     <string name="settings_category_general">General Settings</string>
     <string name="settings_sampling_interval">Sampling Interval</string>
     <string name="settings_sampling_interval_desc">Lower intervals reduce accuracy; higher intervals are more accurate but update slowly.</string>

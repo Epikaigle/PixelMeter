@@ -1,76 +1,66 @@
 package vip.mystery0.pixel.meter.ui.settings
 
-import android.content.Intent
 import android.os.Bundle
-import android.provider.Settings
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.browser.customtabs.CustomTabsIntent
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLocale
-import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.github.skydoves.colorpicker.compose.AlphaSlider
-import com.github.skydoves.colorpicker.compose.AlphaTile
-import com.github.skydoves.colorpicker.compose.BrightnessSlider
-import com.github.skydoves.colorpicker.compose.HsvColorPicker
-import com.github.skydoves.colorpicker.compose.rememberColorPickerController
-import me.zhanghai.compose.preference.ListPreference
-import me.zhanghai.compose.preference.LocalPreferenceTheme
-import me.zhanghai.compose.preference.Preference
-import me.zhanghai.compose.preference.PreferenceCategory
 import me.zhanghai.compose.preference.ProvidePreferenceLocals
-import me.zhanghai.compose.preference.SliderPreference
-import me.zhanghai.compose.preference.SwitchPreference
-import me.zhanghai.compose.preference.TextFieldPreference
-import me.zhanghai.compose.preference.TwoTargetPreference
-import vip.mystery0.pixel.meter.BuildConfig
 import vip.mystery0.pixel.meter.R
-import vip.mystery0.pixel.meter.data.repository.NetworkRepository
 import vip.mystery0.pixel.meter.ui.theme.PixelPulseTheme
+
+private const val SETTINGS_TWO_PANE_MIN_WIDTH_DP = 840
+private const val SETTINGS_PAGE_TRANSITION_DURATION_MS = 250
+private const val SETTINGS_PAGE_FADE_DURATION_MS = 50
+private const val SETTINGS_PAGE_OPEN_FADE_DELAY_MS = 28
+private const val SETTINGS_PAGE_CLOSE_FADE_DELAY_MS = 20
+private const val SETTINGS_PAGE_TRANSITION_DISTANCE_DP = 96
+private val SettingsSidebarWidth = 280.dp
 
 class SettingsActivity : ComponentActivity() {
     private val viewModel by viewModels<SettingsViewModel>()
@@ -100,12 +90,40 @@ class SettingsActivity : ComponentActivity() {
             }
         }
 
+        val isTwoPane = LocalConfiguration.current.screenWidthDp >= SETTINGS_TWO_PANE_MIN_WIDTH_DP
+        var selectedPageName by rememberSaveable { mutableStateOf<String?>(null) }
+        val selectedPage = selectedPageName?.let { name ->
+            SettingsPage.entries.firstOrNull { it.name == name }
+        }
+        val effectivePage = if (isTwoPane) {
+            selectedPage ?: SettingsPage.General
+        } else {
+            selectedPage
+        }
+        val appBarTitleRes = if (!isTwoPane && selectedPage != null) {
+            selectedPage.titleRes
+        } else {
+            R.string.title_settings
+        }
+
+        BackHandler(enabled = !isTwoPane && selectedPage != null) {
+            selectedPageName = null
+        }
+
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text(stringResource(R.string.title_settings)) },
+                    title = { Text(stringResource(appBarTitleRes)) },
                     navigationIcon = {
-                        IconButton(onClick = { finish() }) {
+                        IconButton(
+                            onClick = {
+                                if (!isTwoPane && selectedPage != null) {
+                                    selectedPageName = null
+                                } else {
+                                    finish()
+                                }
+                            }
+                        ) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                         }
                     }
@@ -114,772 +132,163 @@ class SettingsActivity : ComponentActivity() {
             contentWindowInsets = WindowInsets(0, 0, 0, 0)
         ) { paddingValues ->
             ProvidePreferenceLocals {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                ) {
-                    item { GeneralSection(viewModel) }
-                    item { NotificationSection(viewModel) }
-                    item { OverlaySection(viewModel) }
-                    item { BackgroundSection(viewModel) }
-                    item { AboutSection() }
-                    item {
-                        Spacer(modifier = Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun GeneralSection(viewModel: SettingsViewModel) {
-    val context = LocalContext.current
-    val interval by viewModel.samplingInterval.collectAsState(initial = 1500L)
-    val speedUnit by viewModel.speedUnit.collectAsState(initial = 0)
-    val minSpeedUnit by viewModel.minSpeedUnit.collectAsState(initial = 0)
-    val isAutoStartEnabled by viewModel.isAutoStartServiceEnabled.collectAsState(initial = false)
-    val canEnableAutoStart by viewModel.canEnableAutoStart.collectAsState()
-    val hasOverlayPermission by viewModel.canOverlay.collectAsState()
-    val hasNotificationPermission by viewModel.hasNotificationPermission.collectAsState()
-
-    PreferenceCategory(title = { Text(stringResource(R.string.settings_category_general)) })
-
-    SliderPreference(
-        value = 0F,
-        onValueChange = { },
-        sliderValue = interval.toFloat(),
-        onSliderValueChange = { viewModel.setSamplingInterval(it.toLong()) },
-        valueRange = 1000f..3000f,
-        valueSteps = 19,
-        title = { Text(stringResource(R.string.settings_sampling_interval)) },
-        summary = { Text(stringResource(R.string.settings_sampling_interval_desc)) },
-        valueText = { Text("${interval}ms") }
-    )
-
-    val labelAuto = stringResource(R.string.settings_speed_unit_auto)
-    val speedUnitValues = listOf(labelAuto, "B/s", "KB/s", "MB/s", "GB/s")
-    val speedUnitLabel = when (speedUnit) {
-        1 -> "B/s"
-        2 -> "KB/s"
-        3 -> "MB/s"
-        4 -> "GB/s"
-        else -> labelAuto
-    }
-    ListPreference(
-        value = speedUnitLabel,
-        onValueChange = {
-            val unit = when (it) {
-                "B/s" -> 1
-                "KB/s" -> 2
-                "MB/s" -> 3
-                "GB/s" -> 4
-                else -> 0
-            }
-            viewModel.setSpeedUnit(unit)
-        },
-        title = { Text(stringResource(R.string.settings_speed_unit_title)) },
-        values = speedUnitValues,
-        summary = { Text(stringResource(R.string.settings_speed_unit_desc)) }
-    )
-
-    val labelNone = stringResource(R.string.settings_min_speed_unit_none)
-    val minSpeedUnitValues = listOf(labelNone, "KB/s", "MB/s", "GB/s")
-    val minSpeedUnitLabel = when (minSpeedUnit) {
-        1 -> "KB/s"
-        2 -> "MB/s"
-        3 -> "GB/s"
-        else -> labelNone
-    }
-    ListPreference(
-        value = minSpeedUnitLabel,
-        onValueChange = {
-            val unit = when (it) {
-                "KB/s" -> 1
-                "MB/s" -> 2
-                "GB/s" -> 3
-                else -> 0
-            }
-            viewModel.setMinSpeedUnit(unit)
-        },
-        title = { Text(stringResource(R.string.settings_min_speed_unit_title)) },
-        values = minSpeedUnitValues,
-        summary = { Text(stringResource(R.string.settings_min_speed_unit_desc)) },
-        enabled = speedUnit == 0 // Only effective when Auto mode is enabled
-    )
-
-    val autoStartSummary = if (canEnableAutoStart) {
-        stringResource(R.string.settings_auto_start_service_desc)
-    } else {
-        stringResource(R.string.settings_auto_start_disabled_reason)
-    }
-
-    SwitchPreference(
-        value = isAutoStartEnabled,
-        onValueChange = { viewModel.setAutoStartServiceEnabled(it) },
-        enabled = canEnableAutoStart,
-        title = { Text(stringResource(R.string.settings_auto_start_service_title)) },
-        summary = { Text(autoStartSummary) }
-    )
-
-    // Permission Indicators
-    val overlayPermissionSummary = if (hasOverlayPermission) {
-        stringResource(R.string.settings_permission_granted)
-    } else {
-        stringResource(R.string.settings_permission_denied)
-    }
-    Preference(
-        title = { Text(stringResource(R.string.settings_permission_overlay)) },
-        summary = { Text(overlayPermissionSummary) },
-        onClick = {
-            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
-            intent.data = "package:${context.packageName}".toUri()
-            context.startActivity(intent)
-        }
-    )
-
-    val notificationPermissionSummary = if (hasNotificationPermission) {
-        stringResource(R.string.settings_permission_granted)
-    } else {
-        stringResource(R.string.settings_permission_denied)
-    }
-    Preference(
-        title = { Text(stringResource(R.string.settings_permission_notification)) },
-        summary = { Text(notificationPermissionSummary) },
-        onClick = {
-            val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-            intent.putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-            context.startActivity(intent)
-        }
-    )
-}
-
-@Composable
-fun BackgroundSection(viewModel: SettingsViewModel) {
-    val context = LocalContext.current
-    val isIgnoringBatteryOptimizations by viewModel.isIgnoringBatteryOptimizations.collectAsState()
-    val isHideFromRecents by viewModel.isHideFromRecents.collectAsState(initial = false)
-
-    PreferenceCategory(title = { Text(stringResource(R.string.settings_category_background)) })
-
-    Preference(
-        title = { Text(stringResource(R.string.settings_ignore_battery_optimizations_title)) },
-        summary = {
-            Text(
-                if (isIgnoringBatteryOptimizations) stringResource(R.string.settings_ignore_battery_optimizations_on)
-                else stringResource(R.string.settings_ignore_battery_optimizations_off)
-            )
-        },
-        onClick = {
-            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
-            intent.data = "package:${context.packageName}".toUri()
-            context.startActivity(intent)
-        }
-    )
-
-    SwitchPreference(
-        value = isHideFromRecents,
-        onValueChange = { viewModel.setHideFromRecents(it) },
-        title = { Text(stringResource(R.string.settings_hide_from_recents_title)) },
-        summary = { Text(stringResource(R.string.settings_hide_from_recents_desc)) }
-    )
-
-    Preference(
-        title = { Text(stringResource(R.string.settings_dont_kill_my_app_title)) },
-        summary = { Text(stringResource(R.string.settings_dont_kill_my_app_desc)) },
-        onClick = {
-            val url = "https://dontkillmyapp.com/"
-            val customTabsIntent = CustomTabsIntent.Builder()
-                .setShowTitle(true)
-                .build()
-            customTabsIntent.launchUrl(context, url.toUri())
-        }
-    )
-}
-
-@Composable
-fun OverlaySection(viewModel: SettingsViewModel) {
-    val isServiceRunning by viewModel.isServiceRunning.collectAsState()
-    val canOverlay by viewModel.canOverlay.collectAsState()
-
-    val isEnabled by viewModel.isOverlayEnabled.collectAsState(initial = false)
-    val isLocked by viewModel.isOverlayLocked.collectAsState(initial = false)
-    val isOverlayShowOnStatusBar by viewModel.isOverlayShowOnStatusBar.collectAsState(initial = false)
-    val isOverlayUseDefaultColors by viewModel.isOverlayUseDefaultColors.collectAsState(initial = false)
-    val bgColor by viewModel.overlayBgColor.collectAsState(initial = 0)
-    val textColor by viewModel.overlayTextColor.collectAsState(initial = 0)
-    val cornerRadius by viewModel.overlayCornerRadius.collectAsState(initial = 8)
-    val padding by viewModel.overlayPadding.collectAsState(initial = 8)
-    val textSize by viewModel.overlayTextSize.collectAsState(initial = 10f)
-    val textUp by viewModel.overlayTextUp.collectAsState(initial = "▲ ")
-    val textDown by viewModel.overlayTextDown.collectAsState(initial = "▼ ")
-    val upFirst by viewModel.overlayOrderUpFirst.collectAsState(initial = true)
-    val isOverlayHideBackground by viewModel.isOverlayHideBackground.collectAsState(initial = false)
-    val overlayX by viewModel.overlayX.collectAsState(initial = 100)
-    val overlayY by viewModel.overlayY.collectAsState(initial = 200)
-    val isOverlayPortraitOnly by viewModel.isOverlayPortraitOnly.collectAsState(initial = false)
-    val isOverlayHideInImmersiveMode by viewModel.isOverlayHideInImmersiveMode.collectAsState(
-        initial = false
-    )
-    val overlayAutoHideThreshold by viewModel.overlayAutoHideThreshold.collectAsState(initial = 0L)
-    val direction by viewModel.overlayDirection.collectAsState(initial = 0)
-    val alignment by viewModel.overlayAlignment.collectAsState(initial = 0)
-    val meterSpacing by viewModel.overlayMeterSpacing.collectAsState(initial = 8)
-    val platformLocale = LocalLocale.current.platformLocale
-
-    PreferenceCategory(title = { Text(stringResource(R.string.settings_category_overlay)) })
-    val isSwitchEnabled = !isServiceRunning || canOverlay
-    val summaryText = if (isSwitchEnabled) {
-        stringResource(R.string.config_enable_overlay_desc)
-    } else {
-        stringResource(R.string.config_overlay_disabled_reason)
-    }
-    SwitchPreference(
-        value = isEnabled,
-        onValueChange = { viewModel.setOverlayEnabled(it) },
-        enabled = isSwitchEnabled,
-        title = { Text(stringResource(R.string.config_enable_overlay)) },
-        summary = { Text(summaryText) }
-    )
-
-    if (isEnabled) {
-        SwitchPreference(
-            value = isLocked,
-            onValueChange = { viewModel.setOverlayLocked(it) },
-            title = { Text(stringResource(R.string.settings_lock_overlay)) },
-            summary = { Text(stringResource(R.string.config_lock_overlay_desc)) }
-        )
-        SwitchPreference(
-            value = isOverlayShowOnStatusBar,
-            onValueChange = { viewModel.setOverlayShowOnStatusBar(it) },
-            title = { Text(stringResource(R.string.settings_overlay_show_on_status_bar)) },
-            summary = { Text(stringResource(R.string.settings_overlay_show_on_status_bar_desc)) }
-        )
-        TextFieldPreference(
-            value = overlayX.toString(),
-            onValueChange = {
-                val x = it.toIntOrNull()
-                if (x != null) {
-                    viewModel.setOverlayPosition(x, overlayY)
-                }
-            },
-            title = { Text(stringResource(R.string.settings_overlay_position_x)) },
-            summary = { Text(stringResource(R.string.settings_overlay_position_x_desc)) },
-            textToValue = { it },
-        )
-        TextFieldPreference(
-            value = overlayY.toString(),
-            onValueChange = {
-                val y = it.toIntOrNull()
-                if (y != null) {
-                    viewModel.setOverlayPosition(overlayX, y)
-                }
-            },
-            title = { Text(stringResource(R.string.settings_overlay_position_y)) },
-            summary = { Text(stringResource(R.string.settings_overlay_position_y_desc)) },
-            textToValue = { it },
-        )
-        SwitchPreference(
-            value = isOverlayPortraitOnly,
-            onValueChange = { viewModel.setOverlayPortraitOnly(it) },
-            title = { Text(stringResource(R.string.settings_overlay_portrait_only)) },
-            summary = { Text(stringResource(R.string.settings_overlay_portrait_only_desc)) }
-        )
-        SwitchPreference(
-            value = isOverlayHideInImmersiveMode,
-            onValueChange = { viewModel.setOverlayHideInImmersiveMode(it) },
-            title = { Text(stringResource(R.string.settings_overlay_hide_in_immersive_mode)) },
-            summary = {
-                Text(stringResource(R.string.settings_overlay_hide_in_immersive_mode_desc))
-            }
-        )
-        SliderPreference(
-            value = 0F,
-            onValueChange = { },
-            sliderValue = overlayAutoHideThreshold.toFloat() / 1024,
-            onSliderValueChange = {
-                viewModel.setOverlayAutoHideThreshold((it * 1024).toLong())
-            },
-            valueRange = 0f..1024f,
-            valueSteps = 20,
-            title = { Text(stringResource(R.string.settings_overlay_auto_hide_threshold)) },
-            summary = {
-                if (overlayAutoHideThreshold == 0L) {
-                    Text(stringResource(R.string.settings_overlay_auto_hide_threshold_disabled))
+                if (isTwoPane) {
+                    SettingsTwoPaneContent(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues),
+                        selectedPage = effectivePage ?: SettingsPage.General,
+                        onPageSelected = { selectedPageName = it.name },
+                        viewModel = viewModel
+                    )
                 } else {
-                    val thresholdStr =
-                        NetworkRepository.formatSpeedLine(overlayAutoHideThreshold)
-                    Text(
-                        stringResource(
-                            R.string.settings_overlay_auto_hide_threshold_desc,
-                            thresholdStr
-                        )
+                    SettingsSinglePaneContent(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues),
+                        selectedPage = selectedPage,
+                        onPageSelected = { selectedPageName = it.name },
+                        viewModel = viewModel
                     )
                 }
-            },
-            valueText = {
-                Text(NetworkRepository.formatSpeedLine(overlayAutoHideThreshold))
             }
-        )
-        TextFieldPreference(
-            value = (overlayAutoHideThreshold / 1024).toString(),
-            onValueChange = {
-                val kb = it.toLongOrNull()
-                if (kb != null && kb >= 0) {
-                    viewModel.setOverlayAutoHideThreshold(kb * 1024)
-                }
-            },
-            title = { Text(stringResource(R.string.settings_overlay_auto_hide_threshold_input_title)) },
-            summary = {
-                Text(stringResource(R.string.settings_overlay_auto_hide_threshold_input_summary))
-            },
-            textToValue = { it },
-        )
-        SwitchPreference(
-            value = isOverlayUseDefaultColors,
-            onValueChange = { viewModel.setOverlayUseDefaultColors(it) },
-            title = { Text(stringResource(R.string.settings_overlay_use_default_colors)) },
-            summary = { Text(stringResource(R.string.settings_overlay_use_default_colors_desc)) }
-        )
-        SwitchPreference(
-            value = isOverlayHideBackground,
-            onValueChange = { viewModel.setOverlayHideBackground(it) },
-            title = { Text(stringResource(R.string.settings_overlay_hide_background)) },
-            summary = { Text(stringResource(R.string.settings_overlay_hide_background_desc)) }
-        )
-        ColorPreference(
-            title = stringResource(R.string.settings_overlay_bg_color),
-            color = Color(bgColor),
-            enabled = !isOverlayUseDefaultColors && !isOverlayHideBackground,
-            onColorSelected = { viewModel.setOverlayBgColor(it.toArgb()) }
-        )
-        ColorPreference(
-            title = stringResource(R.string.settings_overlay_text_color),
-            color = Color(textColor),
-            enabled = !isOverlayUseDefaultColors,
-            onColorSelected = { viewModel.setOverlayTextColor(it.toArgb()) }
-        )
-        SliderPreference(
-            value = 0F,
-            onValueChange = { },
-            sliderValue = cornerRadius.toFloat(),
-            onSliderValueChange = { viewModel.setOverlayCornerRadius(it.toInt()) },
-            valueRange = 0f..32f,
-            valueSteps = 32,
-            title = { Text(stringResource(R.string.settings_overlay_corner_radius)) },
-            valueText = { Text("${cornerRadius}dp") }
-        )
-        SliderPreference(
-            value = 0F,
-            onValueChange = { },
-            sliderValue = padding.toFloat(),
-            onSliderValueChange = { viewModel.setOverlayPadding(it.toInt()) },
-            valueRange = 0f..24f,
-            valueSteps = 24,
-            title = { Text(stringResource(R.string.settings_overlay_padding)) },
-            valueText = { Text("${padding}dp") }
-        )
-        SliderPreference(
-            value = 0F,
-            onValueChange = { },
-            sliderValue = textSize,
-            onSliderValueChange = { viewModel.setOverlayTextSize(it) },
-            valueRange = 7f..24f,
-            title = { Text(stringResource(R.string.settings_overlay_text_size)) },
-            valueText = { Text("${"%.1f".format(platformLocale, textSize)}sp") }
-        )
-        TextFieldPreference(
-            value = textUp,
-            onValueChange = { viewModel.setOverlayTextUp(it) },
-            textToValue = { it },
-            title = { Text(stringResource(R.string.settings_text_prefix_up)) },
-            summary = { Text(stringResource(R.string.settings_text_prefix_up_desc, textUp)) },
-        )
-        TextFieldPreference(
-            value = textDown,
-            onValueChange = { viewModel.setOverlayTextDown(it) },
-            textToValue = { it },
-            title = { Text(stringResource(R.string.settings_text_prefix_down)) },
-            summary = { Text(stringResource(R.string.settings_text_prefix_down_desc, textDown)) },
-        )
-        SwitchPreference(
-            value = upFirst,
-            onValueChange = { viewModel.setOverlayOrderUpFirst(it) },
-            title = { Text(stringResource(R.string.settings_show_up_first)) },
-            summary = { Text(stringResource(R.string.settings_show_up_first_desc)) }
-        )
-
-        val labelHorizontal = stringResource(R.string.settings_overlay_direction_horizontal)
-        val labelVertical = stringResource(R.string.settings_overlay_direction_vertical)
-        val directionLabel = when (direction) {
-            1 -> labelVertical
-            else -> labelHorizontal
         }
-
-        ListPreference(
-            value = directionLabel,
-            onValueChange = {
-                val dir = when (it) {
-                    labelVertical -> 1
-                    else -> 0
-                }
-                viewModel.setOverlayDirection(dir)
-            },
-            title = { Text(stringResource(R.string.settings_overlay_direction)) },
-            values = listOf(labelHorizontal, labelVertical),
-            summary = { Text(directionLabel) }
-        )
-
-        SliderPreference(
-            value = 0F,
-            onValueChange = { },
-            sliderValue = meterSpacing.toFloat(),
-            onSliderValueChange = { viewModel.setOverlayMeterSpacing(it.toInt()) },
-            valueRange = 0f..120f,
-            valueSteps = 24,
-            title = { Text(stringResource(R.string.settings_overlay_meter_spacing)) },
-            summary = { Text(stringResource(R.string.settings_overlay_meter_spacing_desc)) },
-            valueText = { Text("${meterSpacing}dp") },
-            enabled = direction == 0
-        )
-
-        val labelAlignStart = stringResource(R.string.settings_overlay_alignment_start)
-        val labelAlignCenter = stringResource(R.string.settings_overlay_alignment_center)
-        val labelAlignEnd = stringResource(R.string.settings_overlay_alignment_end)
-        val alignmentLabel = when (alignment) {
-            1 -> labelAlignCenter
-            2 -> labelAlignEnd
-            else -> labelAlignStart
-        }
-
-        ListPreference(
-            value = alignmentLabel,
-            onValueChange = {
-                val align = when (it) {
-                    labelAlignCenter -> 1
-                    labelAlignEnd -> 2
-                    else -> 0
-                }
-                viewModel.setOverlayAlignment(align)
-            },
-            title = { Text(stringResource(R.string.settings_overlay_alignment)) },
-            values = listOf(labelAlignStart, labelAlignCenter, labelAlignEnd),
-            summary = { Text(alignmentLabel) },
-            enabled = direction == 1
-        )
     }
 }
 
 @Composable
-fun NotificationSection(viewModel: SettingsViewModel) {
-    val isEnabled by viewModel.isNotificationEnabled.collectAsState(initial = true)
-    val isLiveUpdateEnabled by viewModel.isLiveUpdateEnabled.collectAsState(initial = false)
-    val textUp by viewModel.notificationTextUp.collectAsState(initial = "▲ ")
-    val textDown by viewModel.notificationTextDown.collectAsState(initial = "▼ ")
-    val upFirst by viewModel.notificationOrderUpFirst.collectAsState(initial = true)
-    val displayMode by viewModel.notificationDisplayMode.collectAsState(initial = 0)
-    val textSize by viewModel.notificationTextSize.collectAsState(initial = 0.65f)
-    val unitSize by viewModel.notificationUnitSize.collectAsState(initial = 0.35f)
-
-    PreferenceCategory(title = { Text(stringResource(R.string.settings_category_notification)) })
-    SwitchPreference(
-        value = isEnabled,
-        onValueChange = { viewModel.setNotificationEnabled(it) },
-        title = { Text(stringResource(R.string.config_enable_notification)) },
-        summary = { Text(stringResource(R.string.config_enable_notification_desc)) }
-    )
-
-    if (isEnabled) {
-        SwitchPreference(
-            value = isLiveUpdateEnabled,
-            onValueChange = { viewModel.setLiveUpdateEnabled(it) },
-            title = { Text(stringResource(R.string.config_enable_live_update)) },
-            summary = { Text(stringResource(R.string.config_enable_live_update_desc)) }
-        )
-        TextFieldPreference(
-            value = textUp,
-            onValueChange = { viewModel.setNotificationTextUp(it) },
-            textToValue = { it },
-            title = { Text(stringResource(R.string.settings_text_prefix_up)) },
-            summary = { Text(stringResource(R.string.settings_text_prefix_up_desc, textUp)) },
-        )
-        TextFieldPreference(
-            value = textDown,
-            onValueChange = { viewModel.setNotificationTextDown(it) },
-            textToValue = { it },
-            title = { Text(stringResource(R.string.settings_text_prefix_down)) },
-            summary = { Text(stringResource(R.string.settings_text_prefix_down_desc, textDown)) },
-        )
-        SwitchPreference(
-            value = upFirst,
-            onValueChange = { viewModel.setNotificationOrderUpFirst(it) },
-            title = { Text(stringResource(R.string.settings_show_up_first)) },
-            summary = { Text(stringResource(R.string.settings_show_up_first_desc)) }
-        )
-
-        val labelTotal = stringResource(R.string.settings_display_mode_total)
-        val labelUpload = stringResource(R.string.settings_display_mode_upload)
-        val labelDownload = stringResource(R.string.settings_display_mode_download)
-
-        val displayModeLabel = when (displayMode) {
-            1 -> labelUpload
-            2 -> labelDownload
-            else -> labelTotal
-        }
-        ListPreference(
-            value = displayModeLabel,
-            onValueChange = {
-                val mode = when (it) {
-                    labelUpload -> 1
-                    labelDownload -> 2
-                    else -> 0
-                }
-                viewModel.setNotificationDisplayMode(mode)
-            },
-            title = { Text(stringResource(R.string.settings_notification_display_mode)) },
-            values = listOf(
-                labelTotal,
-                labelUpload,
-                labelDownload
-            ),
-            summary = { Text(displayModeLabel) }
-        )
-
-        SliderPreference(
-            enabled = !isLiveUpdateEnabled,
-            value = 0F,
-            onValueChange = { },
-            sliderValue = textSize,
-            onSliderValueChange = { viewModel.setNotificationTextSize(it) },
-            valueRange = 0.1f..1.0f,
-            title = { Text(stringResource(R.string.settings_notification_text_size)) },
-            valueText = { Text("%.2f".format(textSize)) }
-        )
-
-        SliderPreference(
-            enabled = !isLiveUpdateEnabled,
-            value = 0F,
-            onValueChange = { },
-            sliderValue = unitSize,
-            onSliderValueChange = { viewModel.setNotificationUnitSize(it) },
-            valueRange = 0.1f..1.0f,
-            title = { Text(stringResource(R.string.settings_notification_unit_size)) },
-            valueText = { Text("%.2f".format(unitSize)) }
-        )
-
-        // Threshold Settings
-        val threshold by viewModel.notificationThreshold.collectAsState(initial = 0L)
-        val lowTrafficMode by viewModel.notificationLowTrafficMode.collectAsState(initial = 0)
-
-        SliderPreference(
-            value = 0F,
-            onValueChange = { },
-            sliderValue = threshold.toFloat() / 1024,
-            onSliderValueChange = { viewModel.setNotificationThreshold((it * 1024).toLong()) },
-            valueRange = 0f..1024f, // 0KB to 1024KB (1MB)
-            valueSteps = 20, // 50KB steps roughly
-            title = { Text(stringResource(R.string.settings_notification_threshold)) },
-            summary = {
-                if (threshold == 0L) {
-                    Text(stringResource(R.string.settings_notification_threshold_disabled))
-                } else {
-                    val thresholdStr =
-                        NetworkRepository.formatSpeedLine(
-                            threshold
-                        )
-                    Text(
-                        stringResource(
-                            R.string.settings_notification_threshold_desc,
-                            thresholdStr
-                        )
+private fun SettingsSinglePaneContent(
+    selectedPage: SettingsPage?,
+    onPageSelected: (SettingsPage) -> Unit,
+    viewModel: SettingsViewModel,
+    modifier: Modifier = Modifier,
+) {
+    val transitionDistancePx = with(LocalDensity.current) {
+        SETTINGS_PAGE_TRANSITION_DISTANCE_DP.dp.roundToPx()
+    }
+    AnimatedContent(
+        targetState = selectedPage,
+        modifier = modifier,
+        transitionSpec = {
+            val isForward = targetState != null && initialState == null
+            val enterOffset = if (isForward) transitionDistancePx else -transitionDistancePx
+            val exitOffset = if (isForward) -transitionDistancePx else transitionDistancePx
+            val enterFade = if (isForward) {
+                fadeIn(
+                    animationSpec = tween(
+                        durationMillis = SETTINGS_PAGE_FADE_DURATION_MS,
+                        delayMillis = SETTINGS_PAGE_OPEN_FADE_DELAY_MS,
+                        easing = LinearEasing
                     )
-                }
-            },
-            valueText = {
-                Text(
-                    NetworkRepository.formatSpeedLine(
-                        threshold
+                )
+            } else {
+                EnterTransition.None
+            }
+            val exitFade = if (isForward) {
+                ExitTransition.None
+            } else {
+                fadeOut(
+                    animationSpec = tween(
+                        durationMillis = SETTINGS_PAGE_FADE_DURATION_MS,
+                        delayMillis = SETTINGS_PAGE_CLOSE_FADE_DELAY_MS,
+                        easing = LinearEasing
                     )
                 )
             }
-        )
+            val enterTransition = slideInHorizontally(
+                animationSpec = tween(
+                    durationMillis = SETTINGS_PAGE_TRANSITION_DURATION_MS,
+                    easing = FastOutSlowInEasing
+                ),
+                initialOffsetX = { enterOffset }
+            ) + enterFade
+            val exitTransition = slideOutHorizontally(
+                animationSpec = tween(
+                    durationMillis = SETTINGS_PAGE_TRANSITION_DURATION_MS,
+                    easing = FastOutSlowInEasing
+                ),
+                targetOffsetX = { exitOffset }
+            ) + exitFade
 
-        TextFieldPreference(
-            value = (threshold / 1024).toString(),
-            onValueChange = {
-                val kb = it.toLongOrNull()
-                if (kb != null && kb >= 0) {
-                    viewModel.setNotificationThreshold(kb * 1024)
-                }
-            },
-            title = { Text(stringResource(R.string.settings_notification_threshold_input_title)) },
-            summary = { Text(stringResource(R.string.settings_notification_threshold_input_summary)) },
-            textToValue = { it },
-        )
-
-        val labelStatic = stringResource(R.string.settings_notification_low_traffic_mode_static)
-        val labelDynamic = stringResource(R.string.settings_notification_low_traffic_mode_dynamic)
-        val lowTrafficModeLabel = when (lowTrafficMode) {
-            1 -> labelDynamic
-            else -> labelStatic
-        }
-
-        ListPreference(
-            value = lowTrafficModeLabel,
-            onValueChange = {
-                val mode = when (it) {
-                    labelDynamic -> 1
-                    else -> 0
-                }
-                viewModel.setNotificationLowTrafficMode(mode)
-            },
-            title = { Text(stringResource(R.string.settings_notification_low_traffic_mode)) },
-            values = listOf(
-                labelStatic,
-                labelDynamic
-            ),
-            summary = {
-                Column {
-                    Text(lowTrafficModeLabel)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = stringResource(R.string.settings_notification_low_traffic_mode_explanation),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+            enterTransition togetherWith exitTransition using SizeTransform(clip = false)
+        },
+        label = "SettingsPageTransition"
+    ) { page ->
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+            item {
+                if (page == null) {
+                    MainSettingsPage(
+                        selectedPage = null,
+                        onPageSelected = onPageSelected
+                    )
+                } else {
+                    SettingsPageContent(
+                        page = page,
+                        viewModel = viewModel
                     )
                 }
             }
-        )
-
-        // Notification Color Settings
-        val useCustomColor by viewModel.notificationUseCustomColor.collectAsState(initial = false)
-        val notificationColor by viewModel.notificationColor.collectAsState(initial = 0)
-
-        SwitchPreference(
-            value = useCustomColor,
-            onValueChange = { viewModel.setNotificationUseCustomColor(it) },
-            title = { Text(stringResource(R.string.settings_notification_use_custom_color_title)) },
-            summary = { Text(stringResource(R.string.settings_notification_use_custom_color_desc)) }
-        )
-
-        ColorPreference(
-            title = stringResource(R.string.settings_notification_color_title),
-            color = Color(notificationColor),
-            enabled = useCustomColor,
-            onColorSelected = { viewModel.setNotificationColor(it.toArgb()) }
-        )
+            item {
+                Spacer(modifier = Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
+            }
+        }
     }
 }
 
 @Composable
-fun AboutSection() {
-    val uriHandler = LocalUriHandler.current
-    PreferenceCategory(title = { Text(stringResource(R.string.settings_category_about)) })
-    Preference(
-        title = { Text(stringResource(R.string.settings_app_version)) },
-        summary = { Text(BuildConfig.VERSION_NAME) }
-    )
-    Preference(
-        title = { Text(stringResource(R.string.settings_github)) },
-        summary = { Text("https://github.com/Pixel-Tailor-CN/PixelMeter") },
-        onClick = { uriHandler.openUri("https://github.com/Pixel-Tailor-CN/PixelMeter") }
-    )
-    Preference(
-        title = { Text(stringResource(R.string.settings_pixel_tailor)) },
-        summary = { Text(stringResource(R.string.settings_pixel_tailor_desc)) },
-        onClick = { uriHandler.openUri("https://pixel.mystery0.app") }
-    )
-    Preference(
-        title = { Text(stringResource(R.string.settings_telegram_channel)) },
-        summary = { Text(stringResource(R.string.settings_telegram_channel_desc)) },
-        onClick = { uriHandler.openUri("https://t.me/pixel_tailor_cn") }
-    )
+private fun SettingsTwoPaneContent(
+    selectedPage: SettingsPage,
+    onPageSelected: (SettingsPage) -> Unit,
+    viewModel: SettingsViewModel,
+    modifier: Modifier = Modifier,
+) {
+    Row(modifier = modifier) {
+        LazyColumn(
+            modifier = Modifier
+                .width(SettingsSidebarWidth)
+                .fillMaxHeight()
+        ) {
+            item {
+                MainSettingsPage(
+                    selectedPage = selectedPage,
+                    onPageSelected = onPageSelected
+                )
+            }
+            item {
+                Spacer(modifier = Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
+            }
+        }
+
+        VerticalDivider()
+
+        LazyColumn(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+        ) {
+            item {
+                SettingsPageContent(
+                    page = selectedPage,
+                    viewModel = viewModel
+                )
+            }
+            item {
+                Spacer(modifier = Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
+            }
+        }
+    }
 }
 
 @Composable
-fun ColorPreference(
-    title: String,
-    color: Color,
-    enabled: Boolean = true,
-    onColorSelected: (Color) -> Unit
+private fun SettingsPageContent(
+    page: SettingsPage,
+    viewModel: SettingsViewModel,
 ) {
-    var showDialog by remember { mutableStateOf(false) }
-
-    val theme = LocalPreferenceTheme.current
-
-    TwoTargetPreference(
-        title = { Text(title) },
-        enabled = enabled,
-        secondTarget = {
-            Box(
-                modifier = Modifier
-                    .padding(horizontal = theme.horizontalSpacing)
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .background(color)
-            )
-        },
-        onClick = { if (enabled) showDialog = true }
-    )
-    if (showDialog) {
-        val controller = rememberColorPickerController()
-        var selectedColor by remember { mutableStateOf(color) }
-
-        AlertDialog(
-            onDismissRequest = { showDialog = false },
-            title = { Text(stringResource(R.string.color_picker_title)) },
-            text = {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                    HsvColorPicker(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp),
-                        controller = controller,
-                        initialColor = color,
-                        onColorChanged = { envelope ->
-                            selectedColor = envelope.color
-                        }
-                    )
-                    AlphaSlider(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(36.dp),
-                        controller = controller,
-                    )
-                    BrightnessSlider(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(36.dp),
-                        controller = controller,
-                    )
-                    AlphaTile(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(36.dp)
-                            .clip(MaterialTheme.shapes.medium),
-                        controller = controller
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    onColorSelected(selectedColor)
-                    showDialog = false
-                }) {
-                    Text(stringResource(android.R.string.ok))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = {
-                    showDialog = false
-                }) {
-                    Text(stringResource(android.R.string.cancel))
-                }
-            }
-        )
+    when (page) {
+        SettingsPage.General -> GeneralSettingsSection(viewModel)
+        SettingsPage.Notification -> NotificationSettingsSection(viewModel)
+        SettingsPage.Overlay -> OverlaySettingsSection(viewModel)
+        SettingsPage.Background -> BackgroundSettingsSection(viewModel)
+        SettingsPage.About -> AboutSettingsSection()
     }
 }
