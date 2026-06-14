@@ -43,8 +43,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -90,7 +90,10 @@ class SettingsActivity : ComponentActivity() {
             }
         }
 
-        val isTwoPane = LocalConfiguration.current.screenWidthDp >= SETTINGS_TWO_PANE_MIN_WIDTH_DP
+        val twoPaneMinWidthPx = with(LocalDensity.current) {
+            SETTINGS_TWO_PANE_MIN_WIDTH_DP.dp.roundToPx()
+        }
+        val isTwoPane = LocalWindowInfo.current.containerSize.width >= twoPaneMinWidthPx
         var selectedPageName by rememberSaveable { mutableStateOf<String?>(null) }
         val selectedPage = selectedPageName?.let { name ->
             SettingsPage.entries.firstOrNull { it.name == name }
