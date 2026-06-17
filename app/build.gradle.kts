@@ -84,6 +84,7 @@ android {
     androidResources {
         localeFilters.add("en")
         localeFilters.add("zh-rCN")
+        localeFilters.add("pt-rBR")
     }
 }
 
