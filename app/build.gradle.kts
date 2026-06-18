@@ -23,6 +23,33 @@ val gitVersionName: String =
     }.standardOutput.asText.get().trim()
 val appVersionName: String = libs.versions.app.version.get()
 
+private val androidLocaleQualifierRegex = Regex("""^(?:[a-z]{2,3}(?:-r[A-Z]{2})?|b\+[A-Za-z]{2,3}(?:\+[A-Za-z0-9]{2,8})*)$""")
+
+private fun discoverLocaleFilters(resDirectory: java.io.File): List<String> {
+    val defaultLocale = resDirectory.resolve("resources.properties")
+        .takeIf { it.isFile }
+        ?.readLines()
+        ?.asSequence()
+        ?.map { it.trim() }
+        ?.firstOrNull { it.startsWith("unqualifiedResLocale=") }
+        ?.substringAfter("=")
+        ?.trim()
+        ?.takeIf { it.isNotEmpty() }
+        ?: error("Missing unqualifiedResLocale in app/src/main/res/resources.properties")
+
+    val localizedLocales = resDirectory
+        .listFiles { file -> file.isDirectory && file.name.startsWith("values-") }
+        .orEmpty()
+        .asSequence()
+        .filter { it.resolve("strings.xml").isFile }
+        .map { it.name.removePrefix("values-") }
+        .filter { androidLocaleQualifierRegex.matches(it) }
+        .sorted()
+        .toList()
+
+    return (listOf(defaultLocale) + localizedLocales).distinct()
+}
+
 kotlin {
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
@@ -82,9 +109,8 @@ android {
     }
     @Suppress("UnstableApiUsage")
     androidResources {
-        localeFilters.add("en")
-        localeFilters.add("zh-rCN")
-        localeFilters.add("pt-rBR")
+        generateLocaleConfig = true
+        localeFilters.addAll(discoverLocaleFilters(layout.projectDirectory.dir("src/main/res").asFile))
     }
 }
 
