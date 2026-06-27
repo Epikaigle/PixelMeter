@@ -159,7 +159,8 @@ class OverlayWindow(
                     val context = LocalContext.current
                     val initialConfig = LocalConfiguration.current
                     var orientation by remember { mutableIntStateOf(initialConfig.orientation) }
-                    var areSystemBarsVisible by remember { mutableStateOf(true) }
+                    var isStatusBarVisible by remember { mutableStateOf(true) }
+                    var isNavigationBarVisible by remember { mutableStateOf(true) }
                     var lowTrafficSamples by remember { mutableIntStateOf(0) }
 
                     DisposableEffect(context) {
@@ -179,9 +180,10 @@ class OverlayWindow(
 
                     DisposableEffect(composeView) {
                         val insetsListener = View.OnApplyWindowInsetsListener { _, insets ->
-                            areSystemBarsVisible =
-                                insets.isVisible(WindowInsets.Type.statusBars()) ||
-                                        insets.isVisible(WindowInsets.Type.navigationBars())
+                            isStatusBarVisible =
+                                insets.isVisible(WindowInsets.Type.statusBars())
+                            isNavigationBarVisible =
+                                insets.isVisible(WindowInsets.Type.navigationBars())
                             insets
                         }
                         val attachListener = object : View.OnAttachStateChangeListener {
@@ -250,7 +252,8 @@ class OverlayWindow(
                         isOverlayPortraitOnly &&
                                 orientation == Configuration.ORIENTATION_LANDSCAPE
                     val shouldHideForImmersiveMode =
-                        isOverlayHideInImmersiveMode && !areSystemBarsVisible
+                        isOverlayHideInImmersiveMode &&
+                                (!isStatusBarVisible || !isNavigationBarVisible)
                     LaunchedEffect(speedUpdateVersion, overlayAutoHideThreshold) {
                         lowTrafficSamples = when {
                             speedUpdateVersion == 0L -> 0

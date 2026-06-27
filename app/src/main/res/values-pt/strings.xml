@@ -57,7 +57,7 @@
   <string name="settings_overlay_portrait_only">Ocultar no Modo Paisagem</string>
   <string name="settings_overlay_portrait_only_desc">Não exibir a janela flutuante quando o dispositivo estiver no modo paisagem</string>
   <string name="settings_overlay_hide_in_immersive_mode">Ocultar no Modo Imersivo</string>
-  <string name="settings_overlay_hide_in_immersive_mode_desc">Ocultar a janela flutuante quando o app em primeiro plano ocultar as barras do sistema</string>
+  <string name="settings_overlay_hide_in_immersive_mode_desc">Ocultar a janela flutuante quando o app em primeiro plano ocultar a barra de status ou a barra de navegação</string>
   <string name="settings_overlay_auto_hide_threshold">Limiar para Ocultar Automaticamente</string>
   <string name="settings_overlay_auto_hide_threshold_desc">Ocultar a janela flutuante após tráfego contínuo abaixo de %1$s</string>
   <string name="settings_overlay_auto_hide_threshold_disabled">Ocultação automática desativada</string>

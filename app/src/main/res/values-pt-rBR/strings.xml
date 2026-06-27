@@ -127,7 +127,7 @@
     <string name="settings_overlay_position_y">Posição Y</string>
     <string name="settings_overlay_position_y_desc">Posição vertical em pixels. São permitidos valores negativos.</string>
     <string name="settings_overlay_hide_in_immersive_mode">Ocultar no Modo Imersivo</string>
-    <string name="settings_overlay_hide_in_immersive_mode_desc">Ocultar a janela flutuante quando o aplicativo em primeiro plano ocultar as barras do sistema</string>
+    <string name="settings_overlay_hide_in_immersive_mode_desc">Ocultar a janela flutuante quando o aplicativo em primeiro plano ocultar a barra de status ou a barra de navegação</string>
     <string name="settings_overlay_auto_hide_threshold">Limiar Mínimo para Ocultação Automática</string>
     <string name="settings_overlay_auto_hide_threshold_desc">Ocultar a janela flutuante se o tráfego contínuo for inferior a %1$s</string>
     <string name="settings_overlay_auto_hide_threshold_disabled">Ocultar Automaticamente Desativado</string>

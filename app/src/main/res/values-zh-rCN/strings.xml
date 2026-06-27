@@ -59,7 +59,7 @@
     <string name="settings_overlay_portrait_only">仅在竖屏显示</string>
     <string name="settings_overlay_portrait_only_desc">在横屏模式下自动隐藏悬浮窗</string>
     <string name="settings_overlay_hide_in_immersive_mode">沉浸模式下隐藏</string>
-    <string name="settings_overlay_hide_in_immersive_mode_desc">当前台应用隐藏系统状态栏和导航栏时，自动隐藏悬浮窗</string>
+    <string name="settings_overlay_hide_in_immersive_mode_desc">当前台应用隐藏状态栏或导航栏时，自动隐藏悬浮窗</string>
     <string name="settings_overlay_auto_hide_threshold">自动隐藏阈值</string>
     <string name="settings_overlay_auto_hide_threshold_desc">网速持续低于 %1$s 后隐藏悬浮窗</string>
     <string name="settings_overlay_auto_hide_threshold_disabled">自动隐藏已禁用</string>
