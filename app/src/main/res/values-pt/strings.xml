@@ -31,6 +31,13 @@
   <string name="settings_min_speed_unit_desc">Força o valor 0 para tráfego reduzido. Ativo apenas no modo Automático.</string>
   <string name="settings_speed_unit_auto">Automático</string>
   <string name="settings_min_speed_unit_none">Nenhuma</string>
+  <string name="settings_theme_mode_title">Tema do Aplicativo</string>
+  <string name="settings_theme_mode_desc">Escolha cores dinâmicas do papel de parede ou uma cor fixa de tema</string>
+  <string name="settings_theme_mode_dynamic">Cores dinâmicas</string>
+  <string name="settings_theme_mode_fixed">Cor fixa</string>
+  <string name="settings_theme_color_title">Cor do Tema</string>
+  <string name="settings_theme_amoled_black_title">Usar Preto AMOLED no Modo Escuro</string>
+  <string name="settings_theme_amoled_black_desc">Usar superfícies em preto puro apenas quando a cor fixa e o modo escuro estiverem ativos</string>
   <string name="settings_auto_start_service_title">Iniciar Serviço de Monitoramento Automaticamente</string>
   <string name="settings_auto_start_service_desc">Iniciar o serviço automaticamente na inicialização</string>
   <string name="settings_auto_start_disabled_reason">Requer Permissão de Sobreposição ou Notificação</string>

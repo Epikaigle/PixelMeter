@@ -38,6 +38,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -69,7 +70,14 @@ class SettingsActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            PixelPulseTheme {
+            val appThemeMode by viewModel.appThemeMode.collectAsState()
+            val appThemeColor by viewModel.appThemeColor.collectAsState()
+            val useAmoledBlack by viewModel.isAppThemeUseAmoledBlack.collectAsState()
+            PixelPulseTheme(
+                themeMode = appThemeMode,
+                themeColor = appThemeColor,
+                useAmoledBlack = useAmoledBlack
+            ) {
                 SettingsScreen()
             }
         }

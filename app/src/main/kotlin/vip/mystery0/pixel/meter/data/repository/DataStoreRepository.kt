@@ -12,6 +12,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import vip.mystery0.pixel.meter.data.model.AppThemeMode
 
 const val DATA_STORE_NAME = "pixel_pulse_preferences"
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = DATA_STORE_NAME)
@@ -60,6 +61,10 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
         val KEY_NOTIFICATION_COLOR = intPreferencesKey("key_notification_color")
         val KEY_SPEED_UNIT = intPreferencesKey("key_speed_unit")
         val KEY_MIN_SPEED_UNIT = intPreferencesKey("key_min_speed_unit")
+        val KEY_APP_THEME_MODE = intPreferencesKey("key_app_theme_mode")
+        val KEY_APP_THEME_COLOR = intPreferencesKey("key_app_theme_color")
+        val KEY_APP_THEME_USE_AMOLED_BLACK =
+            booleanPreferencesKey("key_app_theme_use_amoled_black")
         val KEY_OVERLAY_DIRECTION = intPreferencesKey("key_overlay_direction")
         val KEY_OVERLAY_ALIGNMENT = intPreferencesKey("key_overlay_alignment")
         val KEY_OVERLAY_METER_SPACING = intPreferencesKey("key_overlay_meter_spacing")
@@ -226,6 +231,21 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
     val overlayAutoHideThreshold: Flow<Long> = dataStore.data
         .map { preferences ->
             preferences[KEY_OVERLAY_AUTO_HIDE_THRESHOLD] ?: 0L
+        }
+
+    val appThemeMode: Flow<Int> = dataStore.data
+        .map { preferences ->
+            preferences[KEY_APP_THEME_MODE] ?: AppThemeMode.Dynamic.value
+        }
+
+    val appThemeColor: Flow<Int> = dataStore.data
+        .map { preferences ->
+            preferences[KEY_APP_THEME_COLOR] ?: AppThemeMode.DEFAULT_THEME_COLOR
+        }
+
+    val isAppThemeUseAmoledBlack: Flow<Boolean> = dataStore.data
+        .map { preferences ->
+            preferences[KEY_APP_THEME_USE_AMOLED_BLACK] ?: false
         }
 
     suspend fun setLiveUpdateEnabled(enabled: Boolean) {
@@ -406,6 +426,24 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
     suspend fun setOverlayAutoHideThreshold(threshold: Long) {
         dataStore.edit { preferences ->
             preferences[KEY_OVERLAY_AUTO_HIDE_THRESHOLD] = threshold
+        }
+    }
+
+    suspend fun setAppThemeMode(mode: Int) {
+        dataStore.edit { preferences ->
+            preferences[KEY_APP_THEME_MODE] = AppThemeMode.fromValue(mode).value
+        }
+    }
+
+    suspend fun setAppThemeColor(color: Int) {
+        dataStore.edit { preferences ->
+            preferences[KEY_APP_THEME_COLOR] = color
+        }
+    }
+
+    suspend fun setAppThemeUseAmoledBlack(useAmoledBlack: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[KEY_APP_THEME_USE_AMOLED_BLACK] = useAmoledBlack
         }
     }
 

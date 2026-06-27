@@ -68,6 +68,9 @@ class SettingsViewModel(
     val samplingInterval = repository.samplingInterval
     val speedUnit = repository.speedUnit
     val minSpeedUnit = repository.minSpeedUnit
+    val appThemeMode = repository.appThemeMode
+    val appThemeColor = repository.appThemeColor
+    val isAppThemeUseAmoledBlack = repository.isAppThemeUseAmoledBlack
     val isHideFromRecents = repository.isHideFromRecents
     val isOverlayUseDefaultColors = repository.isOverlayUseDefaultColors
     val isAutoStartServiceEnabled = repository.isAutoStartServiceEnabled
@@ -157,4 +160,8 @@ class SettingsViewModel(
 
     fun setSpeedUnit(unit: Int) = repository.setSpeedUnit(unit)
     fun setMinSpeedUnit(unit: Int) = repository.setMinSpeedUnit(unit)
+    fun setAppThemeMode(mode: Int) = repository.setAppThemeMode(mode)
+    fun setAppThemeColor(color: Int) = repository.setAppThemeColor(color)
+    fun setAppThemeUseAmoledBlack(useAmoledBlack: Boolean) =
+        repository.setAppThemeUseAmoledBlack(useAmoledBlack)
 }

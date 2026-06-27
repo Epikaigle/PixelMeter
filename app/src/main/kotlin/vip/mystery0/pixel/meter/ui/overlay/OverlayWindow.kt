@@ -123,7 +123,14 @@ class OverlayWindow(
             composeView.setViewTreeSavedStateRegistryOwner(this@OverlayWindow)
 
             composeView.setContent {
-                PixelPulseTheme {
+                val appThemeMode by repository.appThemeMode.collectAsState()
+                val appThemeColor by repository.appThemeColor.collectAsState()
+                val useAmoledBlack by repository.isAppThemeUseAmoledBlack.collectAsState()
+                PixelPulseTheme(
+                    themeMode = appThemeMode,
+                    themeColor = appThemeColor,
+                    useAmoledBlack = useAmoledBlack
+                ) {
                     val isLocked by repository.isOverlayLocked.collectAsState()
                     val isShowOnStatusBar by repository.isOverlayShowOnStatusBar.collectAsState()
                     val bgColor by repository.overlayBgColor.collectAsState()

@@ -34,6 +34,13 @@
     <string name="settings_min_speed_unit_desc">Force 0 value for small traffic. Only active in Auto mode.</string>
     <string name="settings_speed_unit_auto">Auto</string>
     <string name="settings_min_speed_unit_none">None</string>
+    <string name="settings_theme_mode_title">App Theme</string>
+    <string name="settings_theme_mode_desc">Choose wallpaper-based dynamic colors or a fixed theme color</string>
+    <string name="settings_theme_mode_dynamic">Dynamic colors</string>
+    <string name="settings_theme_mode_fixed">Fixed color</string>
+    <string name="settings_theme_color_title">Theme Color</string>
+    <string name="settings_theme_amoled_black_title">Use AMOLED Black in Dark Mode</string>
+    <string name="settings_theme_amoled_black_desc">Use pure black surfaces only when fixed color mode and dark mode are active</string>
     <string name="settings_auto_start_service_title">Auto-start Monitoring Service</string>
     <string name="settings_auto_start_service_desc">Start service automatically on boot</string>
     <string name="settings_auto_start_disabled_reason">Requires Overlay or Notification permission</string>

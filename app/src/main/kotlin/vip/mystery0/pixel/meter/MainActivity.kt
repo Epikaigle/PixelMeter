@@ -62,7 +62,14 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContent {
-            PixelPulseTheme {
+            val appThemeMode by viewModel.appThemeMode.collectAsState()
+            val appThemeColor by viewModel.appThemeColor.collectAsState()
+            val useAmoledBlack by viewModel.isAppThemeUseAmoledBlack.collectAsState()
+            PixelPulseTheme(
+                themeMode = appThemeMode,
+                themeColor = appThemeColor,
+                useAmoledBlack = useAmoledBlack
+            ) {
                 HomeScreen()
             }
         }

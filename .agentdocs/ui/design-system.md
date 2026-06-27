@@ -6,10 +6,14 @@ Pixel Meter 严格遵循 Modern Android Development (MAD) 指南，全面采用 
 
 ### 1.1 Material Design String
 
-- **风格**: **Material 3 + 动态取色**。
+- **风格**: **Material 3 + 可配置配色**。
 - **动态取色 (Dynamic Color)**:
     - 通过 Compose Material 3 的 `dynamicLightColorScheme` / `dynamicDarkColorScheme` 生成色板。
     - UI 颜色直接映射系统壁纸色调，确保与原生系统（Settings, Quick Settings）视觉一致。
+- **固定配色 (Fixed Color)**:
+    - 用户可在常规设置中关闭 Monet 动态取色，切换到固定取色并自定义主题色。
+    - “暗黑模式使用 AMOLED 纯黑”是固定取色下的独立开关，默认关闭；开启后仅在深色主题下使用纯黑
+      `background` / `surface`。
 - **主要控件**: 使用 M3 标准组件（`Scaffold`、`TopAppBar`、`Switch`、`Card` 等）。
 - **设置页面 (Settings)**:
     - 使用 `me.zhanghai.compose.preference` 构建原生风格的设置列表。

@@ -32,6 +32,9 @@ class MainViewModel(
 
     val speedUnit = repository.speedUnit
     val minSpeedUnit = repository.minSpeedUnit
+    val appThemeMode = repository.appThemeMode
+    val appThemeColor = repository.appThemeColor
+    val isAppThemeUseAmoledBlack = repository.isAppThemeUseAmoledBlack
 
     val isServiceRunning = repository.isMonitoring
 

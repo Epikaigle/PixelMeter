@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
+import vip.mystery0.pixel.meter.data.model.AppThemeMode
 import vip.mystery0.pixel.meter.data.source.NetSpeedData
 import vip.mystery0.pixel.meter.data.source.impl.SpeedDataSource
 import java.util.Locale
@@ -143,6 +144,16 @@ class NetworkRepository(
     private val _minSpeedUnit = MutableStateFlow(0)
     val minSpeedUnit: StateFlow<Int> = _minSpeedUnit.asStateFlow()
 
+    private val _appThemeMode = MutableStateFlow(AppThemeMode.Dynamic.value)
+    val appThemeMode: StateFlow<Int> = _appThemeMode.asStateFlow()
+
+    private val _appThemeColor = MutableStateFlow(AppThemeMode.DEFAULT_THEME_COLOR)
+    val appThemeColor: StateFlow<Int> = _appThemeColor.asStateFlow()
+
+    private val _isAppThemeUseAmoledBlack = MutableStateFlow(false)
+    val isAppThemeUseAmoledBlack: StateFlow<Boolean> =
+        _isAppThemeUseAmoledBlack.asStateFlow()
+
     private var monitoringJob: Job? = null
     private val scope = CoroutineScope(Dispatchers.Default)
 
@@ -216,6 +227,13 @@ class NetworkRepository(
                 _notificationColor.value = prefs[DataStoreRepository.KEY_NOTIFICATION_COLOR] ?: 0
                 _speedUnit.value = prefs[DataStoreRepository.KEY_SPEED_UNIT] ?: 0
                 _minSpeedUnit.value = prefs[DataStoreRepository.KEY_MIN_SPEED_UNIT] ?: 0
+                _appThemeMode.value =
+                    prefs[DataStoreRepository.KEY_APP_THEME_MODE] ?: AppThemeMode.Dynamic.value
+                _appThemeColor.value =
+                    prefs[DataStoreRepository.KEY_APP_THEME_COLOR]
+                        ?: AppThemeMode.DEFAULT_THEME_COLOR
+                _isAppThemeUseAmoledBlack.value =
+                    prefs[DataStoreRepository.KEY_APP_THEME_USE_AMOLED_BLACK] ?: false
             }
         }
         scope.launch {
@@ -366,6 +384,21 @@ class NetworkRepository(
                 _minSpeedUnit.value = it
             }
         }
+        scope.launch {
+            dataStoreRepository.appThemeMode.collect {
+                _appThemeMode.value = it
+            }
+        }
+        scope.launch {
+            dataStoreRepository.appThemeColor.collect {
+                _appThemeColor.value = it
+            }
+        }
+        scope.launch {
+            dataStoreRepository.isAppThemeUseAmoledBlack.collect {
+                _isAppThemeUseAmoledBlack.value = it
+            }
+        }
     }
 
     fun setOverlayEnabled(enable: Boolean) {
@@ -512,6 +545,18 @@ class NetworkRepository(
 
     fun setMinSpeedUnit(unit: Int) {
         scope.launch { dataStoreRepository.setMinSpeedUnit(unit) }
+    }
+
+    fun setAppThemeMode(mode: Int) {
+        scope.launch { dataStoreRepository.setAppThemeMode(mode) }
+    }
+
+    fun setAppThemeColor(color: Int) {
+        scope.launch { dataStoreRepository.setAppThemeColor(color) }
+    }
+
+    fun setAppThemeUseAmoledBlack(useAmoledBlack: Boolean) {
+        scope.launch { dataStoreRepository.setAppThemeUseAmoledBlack(useAmoledBlack) }
     }
 
     suspend fun getOverlayPosition(): Pair<Int, Int> {

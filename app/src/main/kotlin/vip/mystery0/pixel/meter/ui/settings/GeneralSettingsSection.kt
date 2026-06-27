@@ -6,6 +6,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.core.net.toUri
@@ -15,6 +17,7 @@ import me.zhanghai.compose.preference.PreferenceCategory
 import me.zhanghai.compose.preference.SliderPreference
 import me.zhanghai.compose.preference.SwitchPreference
 import vip.mystery0.pixel.meter.R
+import vip.mystery0.pixel.meter.data.model.AppThemeMode
 
 @Composable
 fun GeneralSettingsSection(viewModel: SettingsViewModel) {
@@ -22,6 +25,13 @@ fun GeneralSettingsSection(viewModel: SettingsViewModel) {
     val interval by viewModel.samplingInterval.collectAsState(initial = 1500L)
     val speedUnit by viewModel.speedUnit.collectAsState(initial = 0)
     val minSpeedUnit by viewModel.minSpeedUnit.collectAsState(initial = 0)
+    val appThemeMode by viewModel.appThemeMode.collectAsState(
+        initial = AppThemeMode.Dynamic.value
+    )
+    val appThemeColor by viewModel.appThemeColor.collectAsState(
+        initial = AppThemeMode.DEFAULT_THEME_COLOR
+    )
+    val useAmoledBlack by viewModel.isAppThemeUseAmoledBlack.collectAsState(initial = false)
     val isAutoStartEnabled by viewModel.isAutoStartServiceEnabled.collectAsState(initial = false)
     val canEnableAutoStart by viewModel.canEnableAutoStart.collectAsState()
     val hasOverlayPermission by viewModel.canOverlay.collectAsState()
@@ -91,6 +101,44 @@ fun GeneralSettingsSection(viewModel: SettingsViewModel) {
         summary = { Text(stringResource(R.string.settings_min_speed_unit_desc)) },
         enabled = speedUnit == 0
     )
+
+    val labelThemeDynamic = stringResource(R.string.settings_theme_mode_dynamic)
+    val labelThemeFixed = stringResource(R.string.settings_theme_mode_fixed)
+    val selectedThemeMode = AppThemeMode.fromValue(appThemeMode)
+    val themeModeValues = listOf(labelThemeDynamic, labelThemeFixed)
+    val themeModeLabel = when (selectedThemeMode) {
+        AppThemeMode.Fixed -> labelThemeFixed
+        AppThemeMode.Dynamic -> labelThemeDynamic
+    }
+    ListPreference(
+        value = themeModeLabel,
+        onValueChange = {
+            val mode = when (it) {
+                labelThemeFixed -> AppThemeMode.Fixed
+                else -> AppThemeMode.Dynamic
+            }
+            viewModel.setAppThemeMode(mode.value)
+        },
+        title = { Text(stringResource(R.string.settings_theme_mode_title)) },
+        values = themeModeValues,
+        summary = { Text(stringResource(R.string.settings_theme_mode_desc)) }
+    )
+    if (selectedThemeMode == AppThemeMode.Fixed) {
+        ColorPreference(
+            title = stringResource(R.string.settings_theme_color_title),
+            color = Color(appThemeColor).copy(alpha = 1f),
+            showAlpha = false,
+            onColorSelected = {
+                viewModel.setAppThemeColor(it.copy(alpha = 1f).toArgb())
+            }
+        )
+        SwitchPreference(
+            value = useAmoledBlack,
+            onValueChange = { viewModel.setAppThemeUseAmoledBlack(it) },
+            title = { Text(stringResource(R.string.settings_theme_amoled_black_title)) },
+            summary = { Text(stringResource(R.string.settings_theme_amoled_black_desc)) }
+        )
+    }
 
     val autoStartSummary = if (canEnableAutoStart) {
         stringResource(R.string.settings_auto_start_service_desc)

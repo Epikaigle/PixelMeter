@@ -37,6 +37,7 @@ fun ColorPreference(
     title: String,
     color: Color,
     enabled: Boolean = true,
+    showAlpha: Boolean = true,
     onColorSelected: (Color) -> Unit,
 ) {
     var showDialog by remember { mutableStateOf(false) }
@@ -79,25 +80,29 @@ fun ColorPreference(
                             selectedColor = envelope.color
                         }
                     )
-                    AlphaSlider(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(36.dp),
-                        controller = controller,
-                    )
+                    if (showAlpha) {
+                        AlphaSlider(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(36.dp),
+                            controller = controller,
+                        )
+                    }
                     BrightnessSlider(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(36.dp),
                         controller = controller,
                     )
-                    AlphaTile(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(36.dp)
-                            .clip(MaterialTheme.shapes.medium),
-                        controller = controller
-                    )
+                    if (showAlpha) {
+                        AlphaTile(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(36.dp)
+                                .clip(MaterialTheme.shapes.medium),
+                            controller = controller
+                        )
+                    }
                 }
             },
             confirmButton = {
