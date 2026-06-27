@@ -127,6 +127,7 @@ NetworkMonitorService (前台服务)
 
 ## 测试与验证
 
+- 本项目不做单元测试：除非用户明确要求，不新增、修改或维护单元测试代码。
 - 此项目不需要编写单元测试或 Android 测试。
 - 变更代码后，必须执行 `./gradlew :app:assembleDebug` 确保编译通过。
 - 运行 `./gradlew lint` 检查潜在的代码质量问题。
