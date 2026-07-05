@@ -21,6 +21,7 @@ import org.koin.android.ext.android.inject
 import vip.mystery0.pixel.meter.data.repository.NetworkRepository
 import vip.mystery0.pixel.meter.data.source.NetSpeedData
 import vip.mystery0.pixel.meter.ui.overlay.OverlayWindow
+import kotlin.time.Duration.Companion.milliseconds
 
 class NetworkMonitorService : Service() {
     companion object {
@@ -34,6 +35,8 @@ class NetworkMonitorService : Service() {
 
     private var serviceJob: Job? = null
     private val scope = CoroutineScope(Dispatchers.Default)
+    private var notificationPostedAtMillis = 0L
+    private var lastNotificationFingerprint: String? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -52,6 +55,9 @@ class NetworkMonitorService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (notificationPostedAtMillis == 0L) {
+            notificationPostedAtMillis = System.currentTimeMillis()
+        }
         val initialNotif = notificationHelper.buildNotification(
             speed = NetSpeedData(0, 0),
             isLiveUpdate = false,
@@ -63,20 +69,22 @@ class NetworkMonitorService : Service() {
             textSize = 0.65f,
             unitSize = 0.35f,
             threshold = 0L,
-            lowTrafficMode = 1
+            lowTrafficMode = 1,
+            postedAtMillis = notificationPostedAtMillis
         )
+        lastNotificationFingerprint = initialNotif.fingerprint
 
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 startForeground(
                     NotificationHelper.NOTIFICATION_ID,
-                    initialNotif,
+                    initialNotif.notification,
                     ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
                 )
             } else {
                 startForeground(
                     NotificationHelper.NOTIFICATION_ID,
-                    initialNotif,
+                    initialNotif.notification,
                     ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
                 )
             }
@@ -121,7 +129,7 @@ class NetworkMonitorService : Service() {
                 }
 
                 // Notification logic
-                val notification = withContext(Dispatchers.Default) {
+                val notificationResult = withContext(Dispatchers.Default) {
                     val isLiveUpdate = repository.isLiveUpdateEnabled.value
                     val isNotificationEnabled = repository.isNotificationEnabled.value
                     val textUp = repository.notificationTextUp.value
@@ -141,10 +149,17 @@ class NetworkMonitorService : Service() {
                         speed, isLiveUpdate, isNotificationEnabled,
                         textUp, textDown, upFirst, displayMode,
                         textSize, unitSize, threshold, lowTrafficMode,
-                        useCustomColor, color, speedUnit, minSpeedUnit
+                        useCustomColor, color, speedUnit, minSpeedUnit,
+                        notificationPostedAtMillis
                     )
                 }
-                notificationManager.notify(NotificationHelper.NOTIFICATION_ID, notification)
+                if (notificationResult.fingerprint != lastNotificationFingerprint) {
+                    lastNotificationFingerprint = notificationResult.fingerprint
+                    notificationManager.notify(
+                        NotificationHelper.NOTIFICATION_ID,
+                        notificationResult.notification
+                    )
+                }
             }
         }
     }
@@ -156,7 +171,7 @@ class NetworkMonitorService : Service() {
                     Log.d(TAG, "Screen OFF: Scheduling sleep in 2 minutes")
                     stopMonitoringJob?.cancel()
                     stopMonitoringJob = scope.launch {
-                        delay(2 * 60 * 1000L) // 2 minutes
+                        delay((2 * 60 * 1000L).milliseconds) // 2 minutes
                         Log.d(TAG, "Screen OFF Timeout: Stopping monitoring to save power")
                         repository.stopMonitoring()
                     }
@@ -181,6 +196,8 @@ class NetworkMonitorService : Service() {
         unregisterReceiver(screenReceiver)
         serviceJob?.cancel()
         stopMonitoringJob?.cancel()
+        notificationPostedAtMillis = 0L
+        lastNotificationFingerprint = null
         overlayWindow.hide()
         repository.stopMonitoring()
         stopForeground(STOP_FOREGROUND_REMOVE)

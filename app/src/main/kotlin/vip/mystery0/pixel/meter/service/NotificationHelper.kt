@@ -51,6 +51,34 @@ class NotificationHelper(private val context: Context) {
         }
     }
 
+    data class NotificationBuildResult(
+        val notification: Notification,
+        val fingerprint: String
+    )
+
+    private data class NotificationRenderState(
+        val mode: String,
+        val contentText: String,
+        val statusText: String? = null,
+        val valueText: String? = null,
+        val unitText: String? = null,
+        val useCustomColor: Boolean = false,
+        val color: Int = 0
+    ) {
+        /**
+         * 生成仅与实际展示结果相关的稳定指纹，用于避免重复发布相同通知。
+         */
+        fun toFingerprint(): String = listOf(
+            mode,
+            contentText,
+            statusText.orEmpty(),
+            valueText.orEmpty(),
+            unitText.orEmpty(),
+            useCustomColor.toString(),
+            if (useCustomColor) color.toString() else ""
+        ).joinToString(separator = "|")
+    }
+
     // Icon generation
     // On Pixel, small icon is typically 24dp. We render at higher res (e.g. 48px or 96px) for clarity
     private val size =
@@ -90,9 +118,128 @@ class NotificationHelper(private val context: Context) {
         useCustomColor: Boolean = false,
         color: Int = 0,
         speedUnit: Int = 0,
-        minSpeedUnit: Int = 0
-    ): Notification {
+        minSpeedUnit: Int = 0,
+        postedAtMillis: Long
+    ): NotificationBuildResult {
+        val renderState = createRenderState(
+            speed = speed,
+            isLiveUpdate = isLiveUpdate,
+            isNotificationEnabled = isNotificationEnabled,
+            textUp = textUp,
+            textDown = textDown,
+            upFirst = upFirst,
+            displayMode = displayMode,
+            threshold = threshold,
+            lowTrafficMode = lowTrafficMode,
+            useCustomColor = useCustomColor,
+            color = color,
+            speedUnit = speedUnit,
+            minSpeedUnit = minSpeedUnit
+        )
+        return NotificationBuildResult(
+            notification = buildNotificationFromState(
+                renderState = renderState,
+                textSize = textSize,
+                unitSize = unitSize,
+                postedAtMillis = postedAtMillis
+            ),
+            fingerprint = renderState.toFingerprint()
+        )
+    }
+
+    private fun createRenderState(
+        speed: NetSpeedData,
+        isLiveUpdate: Boolean,
+        isNotificationEnabled: Boolean,
+        textUp: String,
+        textDown: String,
+        upFirst: Boolean,
+        displayMode: Int,
+        threshold: Long,
+        lowTrafficMode: Int,
+        useCustomColor: Boolean,
+        color: Int,
+        speedUnit: Int,
+        minSpeedUnit: Int
+    ): NotificationRenderState {
         var shouldLiveUpdate = isLiveUpdate
+
+        if (!isNotificationEnabled) {
+            return NotificationRenderState(
+                mode = "disabled-static",
+                contentText = context.getString(R.string.notification_content_text),
+                useCustomColor = useCustomColor,
+                color = color
+            )
+        }
+
+        if (speed.totalSpeed < threshold) {
+            if (lowTrafficMode == 0) {
+                return NotificationRenderState(
+                    mode = "threshold-static",
+                    contentText = context.getString(R.string.notification_content_text_monitoring),
+                    useCustomColor = useCustomColor,
+                    color = color
+                )
+            }
+            shouldLiveUpdate = false
+        }
+
+        val upText = "$textUp${
+            NetworkRepository.formatSpeedLine(
+                speed.uploadSpeed,
+                speedUnit,
+                minSpeedUnit
+            )
+        }"
+        val downText = "$textDown${
+            NetworkRepository.formatSpeedLine(
+                speed.downloadSpeed,
+                speedUnit,
+                minSpeedUnit
+            )
+        }"
+        val contentText = when (displayMode) {
+            1 -> upText
+            2 -> downText
+            else -> if (upFirst) "$upText  $downText" else "$downText  $upText"
+        }
+
+        if (shouldLiveUpdate) {
+            return NotificationRenderState(
+                mode = "live-update",
+                contentText = contentText,
+                statusText = NetworkRepository.formatSpeedTextForLiveUpdate(
+                    speed.totalSpeed,
+                    speedUnit,
+                    minSpeedUnit
+                ),
+                useCustomColor = useCustomColor,
+                color = color
+            )
+        }
+
+        val (valueStr, unitStr) = NetworkRepository.formatSpeedText(
+            speed.totalSpeed,
+            speedUnit,
+            minSpeedUnit
+        )
+        return NotificationRenderState(
+            mode = "bitmap",
+            contentText = contentText,
+            valueText = valueStr,
+            unitText = unitStr,
+            useCustomColor = useCustomColor,
+            color = color
+        )
+    }
+
+    private fun buildNotificationFromState(
+        renderState: NotificationRenderState,
+        textSize: Float,
+        unitSize: Float,
+        postedAtMillis: Long
+    ): Notification {
         val intent = Intent().apply {
             setClassName(context, MainActivity::class.java.name)
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -104,127 +251,48 @@ class NotificationHelper(private val context: Context) {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        // Common Builder setup
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setContentIntent(pendingIntent)
             .setVisibility(NotificationCompat.VISIBILITY_SECRET)
             .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
+            .setWhen(postedAtMillis)
+            .setShowWhen(false)
+            .setContentTitle(context.getString(R.string.notification_content_title))
+            .setContentText(renderState.contentText)
 
-        if (useCustomColor) {
-            builder.setColor(color)
+        if (renderState.useCustomColor) {
+            builder.setColor(renderState.color)
         }
 
-        if (!isNotificationEnabled) {
-            // Notification Disabled (Static Mode)
-            return builder
-                .setContentTitle(context.getString(R.string.notification_content_title))
-                .setContentText(context.getString(R.string.notification_content_text))
-                .setSmallIcon(R.drawable.ic_speed)
-                .build()
-        }
-
-        // Logic for Threshold Check
-        // If speed is below threshold AND user selected Static Mode (0), show static icon
-        if (speed.totalSpeed < threshold) {
-            if (lowTrafficMode == 0) {
-                return builder
-                    .setContentTitle(context.getString(R.string.notification_content_title))
-                    .setContentText(context.getString(R.string.notification_content_text_monitoring))
+        when (renderState.mode) {
+            "live-update" -> {
+                builder
                     .setSmallIcon(R.drawable.ic_speed)
-                    .build()
-            } else {
-                shouldLiveUpdate = false
-            }
-        }
-
-        // Notification Enabled (Dynamic Mode)
-        if (shouldLiveUpdate) {
-            // Live Update Mode
-            val statusText =
-                NetworkRepository.formatSpeedTextForLiveUpdate(
-                    speed.totalSpeed,
-                    speedUnit,
-                    minSpeedUnit
-                )
-            val upText = "$textUp${
-                NetworkRepository.formatSpeedLine(
-                    speed.uploadSpeed,
-                    speedUnit,
-                    minSpeedUnit
-                )
-            }"
-            val downText =
-                "$textDown${
-                    NetworkRepository.formatSpeedLine(
-                        speed.downloadSpeed,
-                        speedUnit,
-                        minSpeedUnit
-                    )
-                }"
-
-            val contentText = when (displayMode) {
-                1 -> upText // Up Only
-                2 -> downText // Down Only
-                else -> if (upFirst) "$upText  $downText" else "$downText  $upText" // Total (Both)
+                    .setShortCriticalText(requireNotNull(renderState.statusText))
+                    .setRequestPromotedOngoing(true)
             }
 
-            builder
-                .setContentTitle(context.getString(R.string.notification_content_title))
-                .setContentText(contentText)
-                .setSmallIcon(R.drawable.ic_speed)
-                .setShortCriticalText(statusText)
-                .setRequestPromotedOngoing(true)
-        } else {
-            // Standard Mode
-            val (valueStr, unitStr) = NetworkRepository.formatSpeedText(
-                speed.totalSpeed,
-                speedUnit,
-                minSpeedUnit
-            )
+            "bitmap" -> {
+                val valueText = requireNotNull(renderState.valueText)
+                val unitText = requireNotNull(renderState.unitText)
 
-            // Draw Bitmap with speed
-            bitmap.eraseColor(Color.TRANSPARENT)
-            val cx = size / 2f
-            val cyValue =
-                size * 0.5f // Ideally this offset might need adjustment based on size, but keeping simple for now
-            val cyUnit = size * 0.95f
+                bitmap.eraseColor(Color.TRANSPARENT)
+                val cx = size / 2f
+                val cyValue = size * 0.5f
+                val cyUnit = size * 0.95f
 
-            textPaint.textSize = size * textSize
-            unitPaint.textSize = size * unitSize
+                textPaint.textSize = size * textSize
+                unitPaint.textSize = size * unitSize
 
-            canvas.drawText(valueStr, cx, cyValue, textPaint)
-            canvas.drawText(unitStr, cx, cyUnit, unitPaint)
+                canvas.drawText(valueText, cx, cyValue, textPaint)
+                canvas.drawText(unitText, cx, cyUnit, unitPaint)
 
-            val smallIcon = IconCompat.createWithBitmap(bitmap)
-
-            val upText = "$textUp${
-                NetworkRepository.formatSpeedLine(
-                    speed.uploadSpeed,
-                    speedUnit,
-                    minSpeedUnit
-                )
-            }"
-            val downText =
-                "$textDown${
-                    NetworkRepository.formatSpeedLine(
-                        speed.downloadSpeed,
-                        speedUnit,
-                        minSpeedUnit
-                    )
-                }"
-
-            val contentText = when (displayMode) {
-                1 -> upText // Up Only
-                2 -> downText // Down Only
-                else -> if (upFirst) "$upText  $downText" else "$downText  $upText" // Total (Both)
+                builder.setSmallIcon(IconCompat.createWithBitmap(bitmap))
             }
 
-            builder
-                .setContentTitle(context.getString(R.string.notification_content_title))
-                .setContentText(contentText)
-                .setSmallIcon(smallIcon)
+            else -> builder.setSmallIcon(R.drawable.ic_speed)
         }
 
         return builder.build()
