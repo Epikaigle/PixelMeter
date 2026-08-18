@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="title_configuration">Настройки</string>
+    <string name="title_configuration">Конфигурация</string>
     <string name="title_monitor_control">Управление мониторингом</string>
     <string name="label_total_speed">Общая скорость</string>
     <string name="label_download">Загрузка</string>
