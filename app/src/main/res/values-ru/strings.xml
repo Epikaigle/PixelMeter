@@ -104,7 +104,7 @@
     <string name="settings_notification_low_traffic_mode">Действие ниже порога</string>
     <string name="settings_notification_low_traffic_mode_static">Показывать статичный значок</string>
     <string name="settings_notification_low_traffic_mode_dynamic">Показывать динамическую скорость</string>
-    <string name="settings_notification_low_traffic_mode_explanation">Статичный: показывать значок приложения.\nДинамический: показывать скорость (например, 0 КБ/с).\nПримечание: изменения могут примениться через 2 цикла обновления.</string>
+    <string name="settings_notification_low_traffic_mode_explanation">Статичный: Показывать значок приложения.\nДинамический: Показывать скорость (например, 0 КБ/с).\nПримечание: Изменения могут примениться через 2 цикла обновления.</string>
     <string name="settings_notification_use_custom_color_title">Свой цвет уведомления</string>
     <string name="settings_notification_use_custom_color_desc">Задать определённый цвет значка уведомления (на некоторых прошивках может работать непредсказуемо)</string>
     <string name="settings_notification_color_title">Цвет уведомления</string>
