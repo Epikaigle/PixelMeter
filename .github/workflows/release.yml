@@ -59,9 +59,9 @@ jobs:
             --ks-key-alias=${{ secrets.SIGN_KEY_ALIAS }} \
             --key-pass=pass:${{ secrets.SIGN_KEY_PASSWORD }}
           unzip apk-output/app.apks universal.apk -d apk-output/
-          mv apk-output/universal.apk "apk-output/PixelText-${GITHUB_REF_NAME}.apk"
+          mv apk-output/universal.apk "apk-output/PixelMeter-${GITHUB_REF_NAME}.apk"
           cp app/build/outputs/bundle/release/app-release.aab \
-             "apk-output/PixelText-${GITHUB_REF_NAME}.aab"
+             "apk-output/PixelMeter-${GITHUB_REF_NAME}.aab"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
