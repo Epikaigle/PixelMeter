@@ -16,8 +16,8 @@ import androidx.core.graphics.createBitmap
 import androidx.core.graphics.drawable.IconCompat
 import vip.mystery0.pixel.meter.MainActivity
 import vip.mystery0.pixel.meter.R
-import vip.mystery0.pixel.meter.data.repository.NetworkRepository
 import vip.mystery0.pixel.meter.data.source.NetSpeedData
+import vip.mystery0.pixel.meter.format.SpeedFormatter
 import kotlin.math.roundToInt
 
 class NotificationHelper(private val context: Context) {
@@ -41,7 +41,7 @@ class NotificationHelper(private val context: Context) {
                 context.getString(R.string.notification_channel_name),
                 NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
-                description = "Shows real-time network speed in status bar"
+                description = context.getString(R.string.notification_channel_description)
                 setShowBadge(false)
                 setGroup(CHANNEL_ID)
                 setSound(null, null)
@@ -186,14 +186,14 @@ class NotificationHelper(private val context: Context) {
         }
 
         val upText = "$textUp${
-            NetworkRepository.formatSpeedLine(
+            SpeedFormatter.formatSpeedLine(
                 speed.uploadSpeed,
                 speedUnit,
                 minSpeedUnit
             )
         }"
         val downText = "$textDown${
-            NetworkRepository.formatSpeedLine(
+            SpeedFormatter.formatSpeedLine(
                 speed.downloadSpeed,
                 speedUnit,
                 minSpeedUnit
@@ -209,7 +209,7 @@ class NotificationHelper(private val context: Context) {
             return NotificationRenderState(
                 mode = "live-update",
                 contentText = contentText,
-                statusText = NetworkRepository.formatSpeedTextForLiveUpdate(
+                statusText = SpeedFormatter.formatSpeedTextForLiveUpdate(
                     speed.totalSpeed,
                     speedUnit,
                     minSpeedUnit
@@ -219,7 +219,7 @@ class NotificationHelper(private val context: Context) {
             )
         }
 
-        val (valueStr, unitStr) = NetworkRepository.formatSpeedText(
+        val (valueStr, unitStr) = SpeedFormatter.formatSpeedText(
             speed.totalSpeed,
             speedUnit,
             minSpeedUnit

@@ -135,7 +135,7 @@ class SettingsActivity : ComponentActivity() {
                                 }
                             }
                         ) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.content_description_back))
                         }
                     }
                 )

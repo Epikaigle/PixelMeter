@@ -40,27 +40,43 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
-import vip.mystery0.pixel.meter.data.repository.NetworkRepository
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import vip.mystery0.pixel.meter.data.source.NetSpeedData
+import vip.mystery0.pixel.meter.format.SpeedFormatter
 import vip.mystery0.pixel.meter.ui.MainViewModel
+import vip.mystery0.pixel.meter.ui.onboarding.OnboardingScreen
 import vip.mystery0.pixel.meter.ui.settings.SettingsActivity
 import vip.mystery0.pixel.meter.ui.theme.PixelPulseTheme
 
 class MainActivity : ComponentActivity() {
+    companion object {
+        const val EXTRA_OPEN_ONBOARDING = "extra_open_onboarding"
+    }
+
     private val viewModel by viewModels<MainViewModel>()
+    private var manualOnboardingRequested by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        manualOnboardingRequested = intent.getBooleanExtra(EXTRA_OPEN_ONBOARDING, false)
+        intent.removeExtra(EXTRA_OPEN_ONBOARDING)
         setContent {
             val appThemeMode by viewModel.appThemeMode.collectAsState()
             val appThemeColor by viewModel.appThemeColor.collectAsState()
@@ -70,8 +86,100 @@ class MainActivity : ComponentActivity() {
                 themeColor = appThemeColor,
                 useAmoledBlack = useAmoledBlack
             ) {
-                HomeScreen()
+                AppContent()
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (intent.getBooleanExtra(EXTRA_OPEN_ONBOARDING, false)) {
+            manualOnboardingRequested = true
+            intent.removeExtra(EXTRA_OPEN_ONBOARDING)
+        }
+    }
+
+    @Composable
+    private fun AppContent() {
+        val context = LocalContext.current
+        val lifecycle = LocalLifecycleOwner.current.lifecycle
+        val isOnboardingShown by viewModel.isOnboardingShown.collectAsState()
+        var notificationPermissionGranted by remember {
+            mutableStateOf(
+                Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+                    ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.POST_NOTIFICATIONS
+                    ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            )
+        }
+        var overlayPermissionGranted by remember {
+            mutableStateOf(Settings.canDrawOverlays(context))
+        }
+
+        val notificationPermissionLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestPermission()
+        ) { granted ->
+            notificationPermissionGranted = granted
+        }
+        val overlayPermissionLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.StartActivityForResult()
+        ) {
+            overlayPermissionGranted = Settings.canDrawOverlays(context)
+        }
+
+        DisposableEffect(lifecycle, context) {
+            val observer = LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_RESUME) {
+                    notificationPermissionGranted =
+                        Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+                            ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.POST_NOTIFICATIONS
+                            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                    overlayPermissionGranted = Settings.canDrawOverlays(context)
+                }
+            }
+            lifecycle.addObserver(observer)
+            onDispose { lifecycle.removeObserver(observer) }
+        }
+
+        if (!isOnboardingShown || manualOnboardingRequested) {
+            OnboardingScreen(
+                liveUpdateSupported = Build.VERSION.SDK_INT >= 36,
+                notificationPermissionGranted = notificationPermissionGranted,
+                overlayPermissionGranted = overlayPermissionGranted,
+                onSkip = {
+                    viewModel.skipOnboarding()
+                    manualOnboardingRequested = false
+                },
+                onRequestNotificationPermission = {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    } else {
+                        notificationPermissionGranted = true
+                    }
+                },
+                onRequestOverlayPermission = {
+                    overlayPermissionLauncher.launch(
+                        Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).apply {
+                            data = "package:${context.packageName}".toUri()
+                        }
+                    )
+                },
+                onComplete = { notificationEnabled, liveUpdateEnabled, overlayEnabled, canStartService ->
+                    viewModel.completeOnboarding(
+                        notificationEnabled = notificationEnabled,
+                        liveUpdateEnabled = liveUpdateEnabled,
+                        overlayEnabled = overlayEnabled,
+                        startServiceAfterSaving = canStartService
+                    )
+                    manualOnboardingRequested = false
+                }
+            )
+        } else {
+            HomeScreen()
         }
     }
 
@@ -127,7 +235,7 @@ class MainActivity : ComponentActivity() {
                         }) {
                             Icon(
                                 imageVector = Icons.Default.Settings,
-                                contentDescription = "Settings"
+                                contentDescription = stringResource(R.string.content_description_settings)
                             )
                         }
                     }
@@ -354,7 +462,7 @@ fun SpeedDashboardCard(speed: NetSpeedData, speedUnit: Int = 0, minSpeedUnit: In
                 style = MaterialTheme.typography.labelMedium
             )
             Text(
-                NetworkRepository.formatSpeedLine(speed.totalSpeed, speedUnit, minSpeedUnit),
+                SpeedFormatter.formatSpeedLine(speed.totalSpeed, speedUnit, minSpeedUnit),
                 style = MaterialTheme.typography.displayMedium,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -369,7 +477,7 @@ fun SpeedDashboardCard(speed: NetSpeedData, speedUnit: Int = 0, minSpeedUnit: In
                         style = MaterialTheme.typography.bodySmall
                     )
                     Text(
-                        "▼ " + NetworkRepository.formatSpeedLine(
+                        "▼ " + SpeedFormatter.formatSpeedLine(
                             speed.downloadSpeed,
                             speedUnit,
                             minSpeedUnit
@@ -383,7 +491,7 @@ fun SpeedDashboardCard(speed: NetSpeedData, speedUnit: Int = 0, minSpeedUnit: In
                         style = MaterialTheme.typography.bodySmall
                     )
                     Text(
-                        "▲ " + NetworkRepository.formatSpeedLine(
+                        "▲ " + SpeedFormatter.formatSpeedLine(
                             speed.uploadSpeed,
                             speedUnit,
                             minSpeedUnit

@@ -73,7 +73,13 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
             booleanPreferencesKey("key_overlay_hide_in_immersive_mode")
         val KEY_OVERLAY_AUTO_HIDE_THRESHOLD =
             longPreferencesKey("key_overlay_auto_hide_threshold")
+        val KEY_ONBOARDING_SHOWN = booleanPreferencesKey("key_onboarding_shown")
     }
+
+    val isOnboardingShown: Flow<Boolean> = dataStore.data
+        .map { preferences ->
+            preferences[KEY_ONBOARDING_SHOWN] ?: preferences.asMap().isNotEmpty()
+        }
 
     val isLiveUpdateEnabled: Flow<Boolean> = dataStore.data
         .map { preferences ->
@@ -82,8 +88,7 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
 
     val isNotificationEnabled: Flow<Boolean> = dataStore.data
         .map { preferences ->
-            preferences[KEY_NOTIFICATION_ENABLED]
-                ?: true // Default TRUE as seen in NetworkRepository
+            preferences[KEY_NOTIFICATION_ENABLED] ?: preferences.asMap().isNotEmpty()
         }
 
     val isOverlayEnabled: Flow<Boolean> = dataStore.data
@@ -247,6 +252,28 @@ class DataStoreRepository(private val dataStore: DataStore<Preferences>) {
         .map { preferences ->
             preferences[KEY_APP_THEME_USE_AMOLED_BLACK] ?: false
         }
+
+    suspend fun markOnboardingShown() {
+        dataStore.edit { preferences ->
+            if (preferences.asMap().isEmpty()) {
+                preferences[KEY_NOTIFICATION_ENABLED] = false
+            }
+            preferences[KEY_ONBOARDING_SHOWN] = true
+        }
+    }
+
+    suspend fun completeOnboarding(
+        notificationEnabled: Boolean,
+        liveUpdateEnabled: Boolean,
+        overlayEnabled: Boolean
+    ) {
+        dataStore.edit { preferences ->
+            preferences[KEY_ONBOARDING_SHOWN] = true
+            preferences[KEY_NOTIFICATION_ENABLED] = notificationEnabled
+            preferences[KEY_LIVE_UPDATE] = liveUpdateEnabled
+            preferences[KEY_OVERLAY_ENABLED] = overlayEnabled
+        }
+    }
 
     suspend fun setLiveUpdateEnabled(enabled: Boolean) {
         dataStore.edit { preferences ->

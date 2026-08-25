@@ -128,6 +128,41 @@
 
     <string name="color_picker_title">选择颜色</string>
 
+    <string name="content_description_settings">设置</string>
+    <string name="content_description_back">返回</string>
+    <string name="notification_channel_description">在状态栏显示实时网速</string>
+
+    <string name="onboarding_title">设置 Pixel Meter</string>
+    <string name="onboarding_step">第 %1$d 步，共 %2$d 步</string>
+    <string name="onboarding_skip">跳过</string>
+    <string name="onboarding_welcome_title">开启 VPN 时也能准确显示网速</string>
+    <string name="onboarding_welcome_desc">选择 Pixel Meter 显示当前网速的方式。所有选项之后都可以在设置中修改。</string>
+    <string name="onboarding_vpn_benefit">Pixel Meter 直接读取 Wi-Fi、蜂窝网络和以太网等物理接口，避免重复统计 VPN 流量。</string>
+    <string name="onboarding_start_setup">开始设置</string>
+    <string name="onboarding_setup_later">稍后设置</string>
+    <string name="onboarding_display_title">选择网速显示方式</string>
+    <string name="onboarding_display_desc">默认不启用任何方式。请选择需要的显示方式，也可以不启用任何方式直接继续。</string>
+    <string name="onboarding_recommended_title">推荐方案</string>
+    <string name="onboarding_recommended_desc">推荐使用通知网速与 Live Update，获得更原生的状态栏体验。</string>
+    <string name="onboarding_recommended_legacy_desc">推荐使用通知网速。Live Update 需要 Android 16 或更高版本。</string>
+    <string name="onboarding_use_recommended">使用推荐方案</string>
+    <string name="onboarding_notification_desc">在常驻通知中动态显示当前网速。</string>
+    <string name="onboarding_live_update_desc">使用 Android 16+ 的 Live Update 状态栏胶囊。</string>
+    <string name="onboarding_live_update_unavailable">当前 Android 版本不可用，需要 Android 16 或更高版本。</string>
+    <string name="onboarding_overlay_desc">在其他应用上方显示可移动的网速悬浮窗。</string>
+    <string name="onboarding_foreground_notification_note">Android 要求监听期间显示前台服务通知。即使关闭通知动态网速，仍会保留最简服务通知。</string>
+    <string name="onboarding_back">上一步</string>
+    <string name="onboarding_next">下一步</string>
+    <string name="onboarding_permission_title">授予必要权限</string>
+    <string name="onboarding_permission_desc">Pixel Meter 只会申请所选显示方式需要的权限。</string>
+    <string name="onboarding_notification_permission_desc">用于运行监听服务并显示前台服务通知。</string>
+    <string name="onboarding_overlay_permission_desc">用于在其他应用上方绘制网速悬浮窗。</string>
+    <string name="onboarding_permission_optional_note">你可以在未授权时完成设置。所选配置会被保存，但监听服务不会自动启动。</string>
+    <string name="onboarding_grant_permission">授予权限</string>
+    <string name="onboarding_finish">完成</string>
+    <string name="settings_run_onboarding_title">重新运行设置向导</string>
+    <string name="settings_run_onboarding_desc">重新选择显示方式并检查必要权限</string>
+
     <string name="error_unknown">未知错误</string>
     <string name="error_notification_permission">启用通知需要授予“通知权限”</string>
     <string name="error_overlay_permission">启用悬浮窗需要“显示在其他应用上层”的权限</string>

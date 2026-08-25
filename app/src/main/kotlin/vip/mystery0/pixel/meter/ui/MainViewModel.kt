@@ -7,8 +7,10 @@ import android.provider.Settings
 import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import vip.mystery0.pixel.meter.R
@@ -26,6 +28,8 @@ class MainViewModel(
 
     val currentSpeed = repository.netSpeed
 
+    val isOnboardingShown = repository.isOnboardingShown
+    val isLiveUpdateEnabled = repository.isLiveUpdateEnabled
     val isOverlayEnabled = repository.isOverlayEnabled
     val isNotificationEnabled = repository.isNotificationEnabled
     val isHideFromRecents = repository.isHideFromRecents
@@ -40,6 +44,30 @@ class MainViewModel(
 
     private val _serviceStartError = MutableStateFlow<Pair<String, String>?>(null)
     val serviceStartError = _serviceStartError.asStateFlow()
+
+    fun skipOnboarding() {
+        viewModelScope.launch {
+            repository.markOnboardingShown()
+        }
+    }
+
+    fun completeOnboarding(
+        notificationEnabled: Boolean,
+        liveUpdateEnabled: Boolean,
+        overlayEnabled: Boolean,
+        startServiceAfterSaving: Boolean
+    ) {
+        viewModelScope.launch {
+            repository.completeOnboarding(
+                notificationEnabled = notificationEnabled,
+                liveUpdateEnabled = liveUpdateEnabled,
+                overlayEnabled = overlayEnabled
+            )
+            if (startServiceAfterSaving) {
+                startService()
+            }
+        }
+    }
 
     fun startService() {
         _serviceStartError.value = null

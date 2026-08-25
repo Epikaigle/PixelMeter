@@ -16,6 +16,7 @@ import me.zhanghai.compose.preference.Preference
 import me.zhanghai.compose.preference.PreferenceCategory
 import me.zhanghai.compose.preference.SliderPreference
 import me.zhanghai.compose.preference.SwitchPreference
+import vip.mystery0.pixel.meter.MainActivity
 import vip.mystery0.pixel.meter.R
 import vip.mystery0.pixel.meter.data.model.AppThemeMode
 
@@ -139,6 +140,19 @@ fun GeneralSettingsSection(viewModel: SettingsViewModel) {
             summary = { Text(stringResource(R.string.settings_theme_amoled_black_desc)) }
         )
     }
+
+    Preference(
+        title = { Text(stringResource(R.string.settings_run_onboarding_title)) },
+        summary = { Text(stringResource(R.string.settings_run_onboarding_desc)) },
+        onClick = {
+            context.startActivity(
+                Intent(context, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    putExtra(MainActivity.EXTRA_OPEN_ONBOARDING, true)
+                }
+            )
+        }
+    )
 
     val autoStartSummary = if (canEnableAutoStart) {
         stringResource(R.string.settings_auto_start_service_desc)

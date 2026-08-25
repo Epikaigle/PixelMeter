@@ -53,6 +53,7 @@ import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import kotlinx.coroutines.launch
 import vip.mystery0.pixel.meter.data.repository.NetworkRepository
 import vip.mystery0.pixel.meter.data.source.NetSpeedData
+import vip.mystery0.pixel.meter.format.SpeedFormatter
 import vip.mystery0.pixel.meter.ui.theme.PixelPulseTheme
 import kotlin.math.roundToInt
 
@@ -394,9 +395,9 @@ fun OverlayContent(
         }
     ) {
         val upSpeedStr =
-            NetworkRepository.formatSpeedLine(speed.uploadSpeed, speedUnit, minSpeedUnit)
+            SpeedFormatter.formatSpeedLine(speed.uploadSpeed, speedUnit, minSpeedUnit)
         val downSpeedStr =
-            NetworkRepository.formatSpeedLine(speed.downloadSpeed, speedUnit, minSpeedUnit)
+            SpeedFormatter.formatSpeedLine(speed.downloadSpeed, speedUnit, minSpeedUnit)
 
         val prefix1 = if (upFirst) textUp else textDown
         val prefix2 = if (upFirst) textDown else textUp

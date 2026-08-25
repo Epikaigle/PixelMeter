@@ -19,11 +19,11 @@ import me.zhanghai.compose.preference.SliderPreference
 import me.zhanghai.compose.preference.SwitchPreference
 import me.zhanghai.compose.preference.TextFieldPreference
 import vip.mystery0.pixel.meter.R
-import vip.mystery0.pixel.meter.data.repository.NetworkRepository
+import vip.mystery0.pixel.meter.format.SpeedFormatter
 
 @Composable
 fun NotificationSettingsSection(viewModel: SettingsViewModel) {
-    val isEnabled by viewModel.isNotificationEnabled.collectAsState(initial = true)
+    val isEnabled by viewModel.isNotificationEnabled.collectAsState(initial = false)
     val isLiveUpdateEnabled by viewModel.isLiveUpdateEnabled.collectAsState(initial = false)
     val textUp by viewModel.notificationTextUp.collectAsState(initial = "\u25B2 ")
     val textDown by viewModel.notificationTextDown.collectAsState(initial = "\u25BC ")
@@ -133,7 +133,7 @@ fun NotificationSettingsSection(viewModel: SettingsViewModel) {
                 if (threshold == 0L) {
                     Text(stringResource(R.string.settings_notification_threshold_disabled))
                 } else {
-                    val thresholdText = NetworkRepository.formatSpeedLine(threshold)
+                    val thresholdText = SpeedFormatter.formatSpeedLine(threshold)
                     Text(
                         stringResource(
                             R.string.settings_notification_threshold_desc,
@@ -143,7 +143,7 @@ fun NotificationSettingsSection(viewModel: SettingsViewModel) {
                 }
             },
             valueText = {
-                Text(NetworkRepository.formatSpeedLine(threshold))
+                Text(SpeedFormatter.formatSpeedLine(threshold))
             }
         )
 

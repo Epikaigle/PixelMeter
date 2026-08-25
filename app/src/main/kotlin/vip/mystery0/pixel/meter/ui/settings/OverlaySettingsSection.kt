@@ -14,7 +14,7 @@ import me.zhanghai.compose.preference.SliderPreference
 import me.zhanghai.compose.preference.SwitchPreference
 import me.zhanghai.compose.preference.TextFieldPreference
 import vip.mystery0.pixel.meter.R
-import vip.mystery0.pixel.meter.data.repository.NetworkRepository
+import vip.mystery0.pixel.meter.format.SpeedFormatter
 
 @Composable
 fun OverlaySettingsSection(viewModel: SettingsViewModel) {
@@ -126,7 +126,7 @@ fun OverlaySettingsSection(viewModel: SettingsViewModel) {
                 if (overlayAutoHideThreshold == 0L) {
                     Text(stringResource(R.string.settings_overlay_auto_hide_threshold_disabled))
                 } else {
-                    val thresholdText = NetworkRepository.formatSpeedLine(overlayAutoHideThreshold)
+                    val thresholdText = SpeedFormatter.formatSpeedLine(overlayAutoHideThreshold)
                     Text(
                         stringResource(
                             R.string.settings_overlay_auto_hide_threshold_desc,
@@ -136,7 +136,7 @@ fun OverlaySettingsSection(viewModel: SettingsViewModel) {
                 }
             },
             valueText = {
-                Text(NetworkRepository.formatSpeedLine(overlayAutoHideThreshold))
+                Text(SpeedFormatter.formatSpeedLine(overlayAutoHideThreshold))
             }
         )
         TextFieldPreference(

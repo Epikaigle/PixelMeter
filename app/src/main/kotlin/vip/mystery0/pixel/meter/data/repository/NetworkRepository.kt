@@ -17,19 +17,21 @@ import org.koin.core.component.KoinComponent
 import vip.mystery0.pixel.meter.data.model.AppThemeMode
 import vip.mystery0.pixel.meter.data.source.NetSpeedData
 import vip.mystery0.pixel.meter.data.source.impl.SpeedDataSource
-import java.util.Locale
 
 class NetworkRepository(
     private val dataSource: SpeedDataSource,
     private val dataStoreRepository: DataStoreRepository,
 ) : KoinComponent {
+    private val _isOnboardingShown = MutableStateFlow(false)
+    val isOnboardingShown: StateFlow<Boolean> = _isOnboardingShown.asStateFlow()
+
     private val _isOverlayEnabled = MutableStateFlow(false)
     val isOverlayEnabled: StateFlow<Boolean> = _isOverlayEnabled.asStateFlow()
 
     private val _isLiveUpdateEnabled = MutableStateFlow(false)
     val isLiveUpdateEnabled: StateFlow<Boolean> = _isLiveUpdateEnabled.asStateFlow()
 
-    private val _isNotificationEnabled = MutableStateFlow(true)
+    private val _isNotificationEnabled = MutableStateFlow(false)
     val isNotificationEnabled: StateFlow<Boolean> = _isNotificationEnabled.asStateFlow()
 
     private val _isOverlayLocked = MutableStateFlow(false)
@@ -165,9 +167,12 @@ class NetworkRepository(
         // 单次文件 IO 批量读取所有偏好设置，避免多次 first() 重复触发 DataStore 读取
         runBlocking {
             dataStoreRepository.allPreferences.first().let { prefs ->
+                val hasExistingPreferences = prefs.asMap().isNotEmpty()
+                _isOnboardingShown.value =
+                    prefs[DataStoreRepository.KEY_ONBOARDING_SHOWN] ?: hasExistingPreferences
                 _isLiveUpdateEnabled.value = prefs[DataStoreRepository.KEY_LIVE_UPDATE] ?: false
                 _isNotificationEnabled.value =
-                    prefs[DataStoreRepository.KEY_NOTIFICATION_ENABLED] ?: true
+                    prefs[DataStoreRepository.KEY_NOTIFICATION_ENABLED] ?: hasExistingPreferences
                 _isOverlayLocked.value = prefs[DataStoreRepository.KEY_OVERLAY_LOCKED] ?: false
                 _isOverlayShowOnStatusBar.value =
                     prefs[DataStoreRepository.KEY_OVERLAY_SHOW_ON_STATUS_BAR] ?: false
@@ -235,6 +240,9 @@ class NetworkRepository(
                 _isAppThemeUseAmoledBlack.value =
                     prefs[DataStoreRepository.KEY_APP_THEME_USE_AMOLED_BLACK] ?: false
             }
+        }
+        scope.launch {
+            dataStoreRepository.isOnboardingShown.collect { _isOnboardingShown.value = it }
         }
         scope.launch {
             dataStoreRepository.isLiveUpdateEnabled.collect { _isLiveUpdateEnabled.value = it }
@@ -399,6 +407,27 @@ class NetworkRepository(
                 _isAppThemeUseAmoledBlack.value = it
             }
         }
+    }
+
+    suspend fun markOnboardingShown() {
+        dataStoreRepository.markOnboardingShown()
+        _isOnboardingShown.value = true
+    }
+
+    suspend fun completeOnboarding(
+        notificationEnabled: Boolean,
+        liveUpdateEnabled: Boolean,
+        overlayEnabled: Boolean
+    ) {
+        dataStoreRepository.completeOnboarding(
+            notificationEnabled = notificationEnabled,
+            liveUpdateEnabled = liveUpdateEnabled,
+            overlayEnabled = overlayEnabled
+        )
+        _isOnboardingShown.value = true
+        _isNotificationEnabled.value = notificationEnabled
+        _isLiveUpdateEnabled.value = liveUpdateEnabled
+        _isOverlayEnabled.value = overlayEnabled
     }
 
     fun setOverlayEnabled(enable: Boolean) {
@@ -636,105 +665,5 @@ class NetworkRepository(
 
     companion object {
         private const val TAG = "NetworkRepository"
-
-        /**
-         * 根据数值大小格式化小数位数：>= 100 → 0 位，>= 10 → 1 位，否则 2 位
-         */
-        private fun formatFixedValue(value: Double): String {
-            val pattern = when {
-                value >= 100 -> "%.0f"
-                value >= 10 -> "%.1f"
-                else -> "%.2f"
-            }
-            return pattern.format(Locale.getDefault(), value)
-        }
-
-        fun formatSpeedTextForLiveUpdate(
-            bytes: Long,
-            speedUnit: Int = 0,
-            minSpeedUnit: Int = 0
-        ): String {
-            if (minSpeedUnit > 0 && speedUnit == 0) {
-                val threshold = when (minSpeedUnit) {
-                    1 -> 1024L
-                    2 -> 1048576L
-                    3 -> 1073741824L
-                    else -> 0L
-                }
-                if (bytes < threshold) {
-                    return "0" + when (minSpeedUnit) {
-                        1 -> "K/s"
-                        2 -> "M/s"
-                        3 -> "G/s"
-                        else -> "B/s"
-                    }
-                }
-            }
-
-            when (speedUnit) {
-                1 -> return "${formatFixedValue(bytes.toDouble())}B/s"
-                2 -> return "${formatFixedValue(bytes / 1024.0)}K/s"
-                3 -> return "${formatFixedValue(bytes / 1048576.0)}M/s"
-                4 -> return "${formatFixedValue(bytes / 1073741824.0)}G/s"
-            }
-            // 自动模式（原有逻辑）
-            if (bytes < 1024) return "${bytes}B/s"
-            val kb = bytes / 1024.0
-            if (kb < 1000) return "${"%.0f".format(Locale.getDefault(), kb)}K/s"
-            val mb = kb / 1024.0
-            if (mb < 1000) {
-                return if (mb < 100) "${"%.1f".format(Locale.getDefault(), mb)}M/s"
-                else "${"%.0f".format(Locale.getDefault(), mb)}M/s"
-            }
-            val gb = mb / 1024.0
-            return "${"%.1f".format(Locale.getDefault(), gb)}G/s"
-        }
-
-        fun formatSpeedText(
-            bytes: Long,
-            speedUnit: Int = 0,
-            minSpeedUnit: Int = 0
-        ): Pair<String, String> {
-            if (minSpeedUnit > 0 && speedUnit == 0) {
-                val threshold = when (minSpeedUnit) {
-                    1 -> 1024L
-                    2 -> 1048576L
-                    3 -> 1073741824L
-                    else -> 0L
-                }
-                if (bytes < threshold) {
-                    val unitStr = when (minSpeedUnit) {
-                        1 -> "KB/s"
-                        2 -> "MB/s"
-                        3 -> "GB/s"
-                        else -> "B/s"
-                    }
-                    return "0" to unitStr
-                }
-            }
-
-            when (speedUnit) {
-                1 -> return formatFixedValue(bytes.toDouble()) to "B/s"
-                2 -> return formatFixedValue(bytes / 1024.0) to "KB/s"
-                3 -> return formatFixedValue(bytes / 1048576.0) to "MB/s"
-                4 -> return formatFixedValue(bytes / 1073741824.0) to "GB/s"
-            }
-            // 自动模式（原有逻辑）
-            if (bytes < 1024) return bytes.toString() to "B/s"
-            val kb = bytes / 1024.0
-            if (kb < 1000) return "%.0f".format(Locale.getDefault(), kb) to "KB/s"
-            val mb = kb / 1024.0
-            if (mb < 1000) {
-                return if (mb < 10) "%.1f".format(Locale.getDefault(), mb) to "MB/s"
-                else "%.0f".format(Locale.getDefault(), mb) to "MB/s"
-            }
-            val gb = mb / 1024.0
-            return "%.1f".format(Locale.getDefault(), gb) to "GB/s"
-        }
-
-        fun formatSpeedLine(bytes: Long, speedUnit: Int = 0, minSpeedUnit: Int = 0): String {
-            val (v, u) = formatSpeedText(bytes, speedUnit, minSpeedUnit)
-            return "$v$u"
-        }
     }
 }
