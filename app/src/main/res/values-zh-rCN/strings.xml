@@ -157,9 +157,11 @@
     <string name="onboarding_permission_desc">Pixel Meter 只会申请所选显示方式需要的权限。</string>
     <string name="onboarding_notification_permission_desc">用于运行监听服务并显示前台服务通知。</string>
     <string name="onboarding_overlay_permission_desc">用于在其他应用上方绘制网速悬浮窗。</string>
-    <string name="onboarding_permission_optional_note">你可以在未授权时完成设置。所选配置会被保存，但监听服务不会自动启动。</string>
+    <string name="onboarding_permission_optional_note">请授予所选功能需要的权限，或选择稍后授权。稍后授权会保存配置，但不会自动启动监听服务。</string>
     <string name="onboarding_grant_permission">授予权限</string>
     <string name="onboarding_finish">完成</string>
+    <string name="onboarding_finish_and_start">完成并启动</string>
+    <string name="onboarding_finish_later">稍后授权</string>
     <string name="settings_run_onboarding_title">重新运行设置向导</string>
     <string name="settings_run_onboarding_desc">重新选择显示方式并检查必要权限</string>
 

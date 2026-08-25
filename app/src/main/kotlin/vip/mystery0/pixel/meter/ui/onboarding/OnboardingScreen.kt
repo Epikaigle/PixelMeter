@@ -113,15 +113,20 @@ fun OnboardingScreen(
                     onRequestNotificationPermission = onRequestNotificationPermission,
                     onRequestOverlayPermission = onRequestOverlayPermission,
                     onBack = { step = 1 },
-                    onComplete = {
-                        val canStartService = (notificationEnabled || overlayEnabled) &&
-                            notificationPermissionGranted &&
-                            (!overlayEnabled || overlayPermissionGranted)
+                    onFinish = {
                         onComplete(
                             notificationEnabled,
                             liveUpdateEnabled,
                             overlayEnabled,
-                            canStartService
+                            notificationEnabled || overlayEnabled
+                        )
+                    },
+                    onFinishLater = {
+                        onComplete(
+                            notificationEnabled,
+                            liveUpdateEnabled,
+                            overlayEnabled,
+                            false
                         )
                     }
                 )
@@ -305,8 +310,12 @@ private fun PermissionStep(
     onRequestNotificationPermission: () -> Unit,
     onRequestOverlayPermission: () -> Unit,
     onBack: () -> Unit,
-    onComplete: () -> Unit
+    onFinish: () -> Unit,
+    onFinishLater: () -> Unit
 ) {
+    val requiredPermissionsGranted =
+        (!notificationRequired || notificationPermissionGranted) &&
+            (!overlayRequired || overlayPermissionGranted)
     Text(
         text = stringResource(R.string.onboarding_permission_title),
         style = MaterialTheme.typography.headlineSmall
@@ -331,11 +340,13 @@ private fun PermissionStep(
             onRequest = onRequestOverlayPermission
         )
     }
-    Text(
-        text = stringResource(R.string.onboarding_permission_optional_note),
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant
-    )
+    if (!requiredPermissionsGranted) {
+        Text(
+            text = stringResource(R.string.onboarding_permission_optional_note),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -347,10 +358,27 @@ private fun PermissionStep(
             Text(stringResource(R.string.onboarding_back))
         }
         Button(
-            onClick = onComplete,
+            onClick = onFinish,
+            enabled = requiredPermissionsGranted,
             modifier = Modifier.weight(1f)
         ) {
-            Text(stringResource(R.string.onboarding_finish))
+            Text(
+                stringResource(
+                    if (notificationRequired) {
+                        R.string.onboarding_finish_and_start
+                    } else {
+                        R.string.onboarding_finish
+                    }
+                )
+            )
+        }
+    }
+    if (!requiredPermissionsGranted) {
+        TextButton(
+            onClick = onFinishLater,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(stringResource(R.string.onboarding_finish_later))
         }
     }
 }

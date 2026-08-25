@@ -136,9 +136,11 @@
     <string name="onboarding_permission_desc">O Pixel Meter solicita apenas as permissões exigidas pelos métodos de exibição selecionados.</string>
     <string name="onboarding_notification_permission_desc">Necessária para executar o monitoramento e mostrar a notificação do serviço em primeiro plano.</string>
     <string name="onboarding_overlay_permission_desc">Necessária para mostrar o medidor flutuante sobre outros aplicativos.</string>
-    <string name="onboarding_permission_optional_note">Você pode concluir sem conceder permissões. Suas escolhas serão salvas, mas o monitoramento não será iniciado automaticamente.</string>
+    <string name="onboarding_permission_optional_note">Conceda as permissões exigidas pelos recursos selecionados ou escolha concedê-las mais tarde. Suas escolhas serão salvas, mas o monitoramento não será iniciado automaticamente.</string>
     <string name="onboarding_grant_permission">Conceder permissão</string>
     <string name="onboarding_finish">Concluir</string>
+    <string name="onboarding_finish_and_start">Concluir e iniciar</string>
+    <string name="onboarding_finish_later">Conceder mais tarde</string>
     <string name="settings_run_onboarding_title">Executar o assistente novamente</string>
     <string name="settings_run_onboarding_desc">Revise os métodos de exibição e as permissões necessárias</string>
     <string name="color_picker_title">Selecionar Cor</string>

@@ -3,6 +3,7 @@ package vip.mystery0.pixel.meter.ui
 import android.app.Application
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.provider.Settings
 import android.util.Log
 import androidx.core.content.ContextCompat
@@ -72,12 +73,8 @@ class MainViewModel(
     fun startService() {
         _serviceStartError.value = null
 
-        // 1. Check Notification Permission (Android 13+)
-        if (ContextCompat.checkSelfPermission(
-                application,
-                android.Manifest.permission.POST_NOTIFICATIONS
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
+        // 1. 检查通知权限（仅 Android 13+ 需要运行时授权）
+        if (!hasNotificationPermission()) {
             _serviceStartError.value =
                 application.getString(R.string.error_notification_permission) to Settings.ACTION_APP_NOTIFICATION_SETTINGS
             return
@@ -131,11 +128,7 @@ class MainViewModel(
 
     fun setNotificationEnabled(enable: Boolean) {
         if (enable && isServiceRunning.value) {
-            if (ContextCompat.checkSelfPermission(
-                    application,
-                    android.Manifest.permission.POST_NOTIFICATIONS
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
+            if (!hasNotificationPermission()) {
                 _serviceStartError.value =
                     application.getString(R.string.error_notification_permission) to Settings.ACTION_APP_NOTIFICATION_SETTINGS
                 stopService(false)
@@ -143,4 +136,11 @@ class MainViewModel(
         }
         repository.setNotificationEnabled(enable)
     }
+
+    private fun hasNotificationPermission(): Boolean =
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            ContextCompat.checkSelfPermission(
+                application,
+                android.Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
 }
