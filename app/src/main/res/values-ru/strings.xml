@@ -124,6 +124,44 @@
     <string name="settings_telegram_channel">Канал Telegram</string>
     <string name="settings_telegram_channel_desc">Следите за каналом Telegram, чтобы получать обновления</string>
     <string name="color_picker_title">Выбор цвета</string>
+
+    <string name="content_description_settings">Настройки</string>
+    <string name="content_description_back">Назад</string>
+    <string name="notification_channel_description">Показывает скорость сети в реальном времени в строке состояния</string>
+
+    <string name="onboarding_title">Настройка Pixel Meter</string>
+    <string name="onboarding_step">Шаг %1$d из %2$d</string>
+    <string name="onboarding_skip">Пропустить</string>
+    <string name="onboarding_welcome_title">Точный мониторинг скорости даже при использовании VPN</string>
+    <string name="onboarding_welcome_desc">Выберите, как Pixel Meter будет показывать текущую скорость сети. Все параметры можно изменить позже в настройках.</string>
+    <string name="onboarding_vpn_benefit">Pixel Meter считывает данные физических интерфейсов Wi-Fi, мобильной сети и Ethernet, чтобы не учитывать VPN-трафик дважды.</string>
+    <string name="onboarding_start_setup">Начать настройку</string>
+    <string name="onboarding_setup_later">Настроить позже</string>
+    <string name="onboarding_display_title">Выберите способ отображения скорости</string>
+    <string name="onboarding_display_desc">По умолчанию ничего не включено. Выберите нужные способы отображения или продолжите, не включая их.</string>
+    <string name="onboarding_recommended_title">Рекомендуется</string>
+    <string name="onboarding_recommended_desc">Используйте отображение скорости в уведомлении с Live Update для наиболее естественной интеграции со строкой состояния.</string>
+    <string name="onboarding_recommended_legacy_desc">Используйте отображение скорости в уведомлении. Для Live Update требуется Android 16 или новее.</string>
+    <string name="onboarding_use_recommended">Использовать рекомендуемые настройки</string>
+    <string name="onboarding_notification_desc">Динамически показывать текущую скорость сети в постоянном уведомлении.</string>
+    <string name="onboarding_live_update_desc">Использовать индикатор Live Update в строке состояния на Android 16 и новее.</string>
+    <string name="onboarding_live_update_unavailable">Недоступно в этой версии Android. Требуется Android 16 или новее.</string>
+    <string name="onboarding_overlay_desc">Показывать перемещаемый индикатор скорости поверх других приложений.</string>
+    <string name="onboarding_foreground_notification_note">Во время мониторинга Android требует показывать уведомление службы переднего плана. Если динамическое отображение скорости отключено, минимальное служебное уведомление останется видимым.</string>
+    <string name="onboarding_back">Назад</string>
+    <string name="onboarding_next">Далее</string>
+    <string name="onboarding_permission_title">Предоставьте необходимые разрешения</string>
+    <string name="onboarding_permission_desc">Pixel Meter запрашивает только разрешения, необходимые для выбранных способов отображения.</string>
+    <string name="onboarding_notification_permission_desc">Необходимо для мониторинга и показа уведомления службы переднего плана.</string>
+    <string name="onboarding_overlay_permission_desc">Необходимо для отображения плавающего индикатора скорости поверх других приложений.</string>
+    <string name="onboarding_permission_optional_note">Предоставьте разрешения, необходимые для выбранных функций, или сделайте это позже. Настройки будут сохранены, но мониторинг не запустится автоматически.</string>
+    <string name="onboarding_grant_permission">Предоставить разрешение</string>
+    <string name="onboarding_finish">Готово</string>
+    <string name="onboarding_finish_and_start">Завершить и запустить</string>
+    <string name="onboarding_finish_later">Предоставить позже</string>
+    <string name="settings_run_onboarding_title">Повторно запустить мастер настройки</string>
+    <string name="settings_run_onboarding_desc">Проверить способы отображения и необходимые разрешения</string>
+
     <string name="error_unknown">Неизвестная ошибка</string>
     <string name="error_notification_permission">Требуется разрешение на уведомления</string>
     <string name="error_overlay_permission">Для плавающего окна требуется разрешение на отображение поверх других приложений</string>
