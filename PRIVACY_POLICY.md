@@ -1,55 +1,60 @@
 # Privacy Policy for Pixel Meter
 
-**Effective Date:** 2025-12-27
+**Effective Date:** 2026-08-26
 
-Pixel Meter ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy
-explains how our application handles your information.
+Pixel Meter ("we," "our," or "us") is committed to protecting your privacy. This policy explains how the app processes information and uses Android permissions.
 
-## 1. Information Collection and Use
+## 1. Information Collection and Processing
 
-**We do not collect, store, or transmit any Service Personal Data or Device Data.**
+**Pixel Meter does not collect, store, sell or transmit personal data, device identifiers, network traffic contents, browsing history or app usage data.**
 
-Pixel Meter is designed to process all network traffic monitoring solely on your device ("local
-processing"). No data regarding your network usage, websites visited, or app usage is sent to our
-servers or any third parties.
+The app reads local byte counters exposed by Android for active physical network interfaces. These counters are used only to calculate the current upload and download speed on your device. Pixel Meter does not inspect packet contents, DNS requests, websites or communications.
 
-## 2. Permissions and Their Usage
+Settings are stored locally with Android Preferences DataStore.
 
-To provide its core functionality, Pixel Meter requests the following permissions. These permissions
-are used strictly for the purposes described below:
+## 2. Permissions
 
-* **`android.permission.ACCESS_NETWORK_STATE`**: Used to detect network connection status and
-  identify physical network interfaces (Wi-Fi, Cellular) versus virtual ones (VPN).
-* **`android.permission.INTERNET`**: Used **only** when you explicitly initiate the "Speed Test"
-  feature (via Cloudflare). The app does not maintain a constant internet connection for background
-  data reporting.
-* **`android.permission.FOREGROUND_SERVICE`**: Required to keep the network monitor service active
-  in the background to provide real-time updates to the notification bar or overlay.
-* **`android.permission.SYSTEM_ALERT_WINDOW`**: Required if you choose to enable the "Floating
-  Window" (Overlay) feature to display network speed over other apps.
-* **`android.permission.POST_NOTIFICATIONS`**: Used to display the real-time network speed in the
-  status bar/notification shade.
+Pixel Meter may declare or request the following permissions:
 
-## 3. Third-Party Services
+- **`ACCESS_NETWORK_STATE`**: Identifies active network transports and physical interface names, and excludes VPN transports from speed calculation.
+- **`INTERNET`**: Supports links opened by the user, including the Cloudflare speed test. Pixel Meter does not use it for analytics or background reporting.
+- **`FOREGROUND_SERVICE`**: Runs the user-enabled real-time monitoring service.
+- **`FOREGROUND_SERVICE_SPECIAL_USE`**: Declares the network-monitor Foreground Service subtype used on Android 14 and later.
+- **`FOREGROUND_SERVICE_DATA_SYNC`**: Provides the compatible Foreground Service type used on earlier supported Android versions.
+- **`POST_NOTIFICATIONS`**: Required on Android 13 and later to show the monitoring notification.
+- **`POST_PROMOTED_NOTIFICATIONS`**: Supports the optional Android 16+ Live Update presentation when enabled by the user and supported by the system.
+- **`SYSTEM_ALERT_WINDOW`**: Requested only when the user enables the floating window, allowing network speed to be displayed over other apps.
+- **`RECEIVE_BOOT_COMPLETED`**: Starts monitoring after device boot only when the user has explicitly enabled automatic start.
+- **`REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`**: Opens the system battery optimization exemption request when the user selects that setting. The user controls whether the exemption is granted.
 
-Pixel Meter does not include third-party analytics, advertising SDKs, or tracking tools.
+Android requires an ongoing notification while the Foreground Service is running. If dynamic notification speed is disabled, a minimal service notification remains visible.
 
-The "Speed Test" feature allows you to open a web page (`speed.cloudflare.com`) using Chrome Custom
-Tabs. This interaction is subject to Cloudflare's privacy policy and your browser's privacy
-settings.
+## 3. Third-Party Pages
 
-## 4. Children’s Privacy
+Pixel Meter does not include third-party analytics, advertising SDKs or tracking libraries.
 
-Our Service does not address anyone under the age of 13. We do not knowingly collect personally
-identifiable information from anyone under the age of 13.
+User actions may open external pages with Chrome Custom Tabs or another browser, including:
 
-## 5. Changes to This Privacy Policy
+- `speed.cloudflare.com`
+- GitHub
+- Pixel Tailor
+- Telegram
+- `dontkillmyapp.com`
 
-We may update our Privacy Policy from time to time. Thus, you are advised to review this page
-periodically for any changes. We will notify you of any changes by posting the new Privacy Policy on
-this page.
+Those pages are governed by their own privacy policies and the privacy settings of the selected browser. Pixel Meter does not receive browsing data from them.
 
-## 6. Contact Us
+## 4. Data Sharing and Retention
 
-If you have any questions or suggestions about our Privacy Policy, do not hesitate to contact us by
-submitting an issue on our [GitHub Repository](https://github.com/Pixel-Tailor-CN/PixelMeter).
+Pixel Meter does not operate a server for application data and does not share user data with third parties. Local settings remain on the device until the app data is cleared or the app is uninstalled.
+
+## 5. Children’s Privacy
+
+Pixel Meter is not directed to children under 13 and does not knowingly collect personal information from children.
+
+## 6. Policy Changes
+
+This policy may be updated when app functionality, permissions or legal requirements change. The latest version will be published with the project and relevant distribution pages.
+
+## 7. Contact
+
+Questions or suggestions can be submitted through the [Pixel Meter GitHub repository](https://github.com/Pixel-Tailor-CN/PixelMeter/issues).

@@ -1,198 +1,164 @@
 # AGENTS.md
 
-本文件是本仓库的统一协作规范。所有智能体、自动化助手和开发者在处理本仓库任务时，均应优先遵循本文件。
+本文件是 Pixel Meter 仓库的统一协作规范。所有开发者、自动化工具与智能体处理本仓库任务时，均应优先遵循本文件。
 
-## 总则
+## 1. 协作规则
 
 - 使用中文回复用户。
-- 生成的代码注释和文档使用中文。
-- 日志打印使用英文。
-- 涉及专业术语（如 Interface、Tun、Binder、Overlay、StateFlow、Repository）时保留英文，必要时附带中文解释。
-- 当需求不明确时，先提问澄清，尤其是网络接口过滤规则、悬浮窗交互、后台保活等容易受系统限制影响的需求。
-- 对用户提出的方案，需要结合 Android 系统限制进行分析，特别是后台限制、前台服务限制、通知权限和悬浮窗权限。
+- 代码注释、KDoc 与项目文档使用中文；运行日志使用英文。
+- Interface、Transport、Foreground Service、Overlay、StateFlow、Repository、Live Update 等专业术语保留英文。
+- 需求不明确时先澄清，特别是网络接口过滤、权限、Foreground Service、Overlay 和后台运行相关需求。
+- 评估功能方案时必须考虑 Android 后台限制、通知权限、Overlay 权限、Foreground Service 类型和 Google Play 政策。
+- 核心功能禁止依赖 Root、Shizuku 或 ADB 常驻权限。
+- 不在 Activity 中堆叠业务逻辑；状态与持久化逻辑应位于 ViewModel、Repository 或 DataSource。
+- 原则上单个源文件不超过 1000 行。
 
-## 项目概述
+## 2. 项目定位
 
-PixelMeter 是一款面向 Google Pixel 及原生 Android 设备的网速监控应用。核心特性是通过
-`ConnectivityManager` + `TrafficStats` 过滤 VPN 虚拟接口（如 `tun0`
-），仅统计物理网络接口（Wi-Fi、Cellular、Ethernet）的流量，避免 VPN 场景下流量双重计数。
+Pixel Meter 是面向 Google Pixel 和原生/类原生 Android 设备的实时网速监控应用。
 
-## 构建命令
+核心能力是使用 `ConnectivityManager.NetworkCallback` 识别 Wi-Fi、Cellular、Ethernet 等物理网络，排除带有
+`TRANSPORT_VPN` 的虚拟网络，再通过 `TrafficStats.getRxBytes/getTxBytes` 逐接口读取流量计数，避免 VPN 场景下物理接口和虚拟接口被重复统计。
+
+## 3. 工具链与版本来源
+
+- 单模块 Android 应用：`app/`
+- Min SDK：31（Android 12）
+- Compile SDK / Target SDK：37
+- JVM Target：21
+- Kotlin、AGP、Compose BOM、依赖版本和 `app-version` 的唯一事实来源：`gradle/libs.versions.toml`
+- 当前主要版本：Kotlin 2.4.10、AGP 9.3.2、Compose BOM 2026.08.00
+- 全局 opt-in：`ExperimentalMaterial3Api`
+- `versionCode`：Git commit 数量
+- `versionName`：`app-version` + 构建类型后缀 + Git 信息
+- 当前语言资源：英语、简体中文、葡萄牙语、巴西葡萄牙语、俄语
+- 默认资源语言：英语，配置见 `app/src/main/res/resources.properties`
+
+## 4. 构建与验证
 
 ```bash
-# Debug 构建
 ./gradlew :app:assembleDebug
-
-# Release 构建（需要在 local.properties 中配置签名信息）
 ./gradlew :app:assembleRelease
-
-# Lint 检查
 ./gradlew lint
 ```
 
-项目不需要编写单元测试或 Android 测试，验证以构建、Lint 和真机功能验证为主。
+Windows 可使用对应的 `gradlew.bat`。Release 构建需要签名配置。
 
-## SDK 与工具链
+项目默认不编写单元测试或 Android 测试，除非用户明确要求。代码变更后的最低验证要求：
 
-- **MinSDK**: 31 (Android 12)
-- **CompileSDK/TargetSDK**: 37
-- **Kotlin**: 2.4.0
-- **JVM Target**: 21
-- **AGP**: 9.2.1
-- **Compose BOM**: 2026.05.01
-- 全局 opt-in：`ExperimentalMaterial3Api`
-- 版本目录：`gradle/libs.versions.toml`
-- 版本号策略：`versionCode` 来自 git commit 数量，`versionName` 来自 `libs.versions.toml` 中的
-  `app-version`
-- 支持语言：`en`、`zh-rCN`
+1. 执行 `:app:assembleDebug`。
+2. 执行 `lint`。
+3. 涉及网速统计、通知、Overlay 或 Foreground Service 时，在 Pixel 真机验证。
+4. 涉及数据源时重点验证 VPN 开启后不会重复统计虚拟网络流量。
+5. 涉及翻译资源时确认所有 `values-*` 中的字符串完整，避免 `MissingTranslation`。
 
-## 架构
+## 5. 架构
 
-项目是单模块应用（`app/`），采用 **MVVM** 架构，使用 Kotlin + Jetpack Compose (Material 3)，依赖注入使用
-**Koin**。
+包根路径：`app/src/main/kotlin/vip/mystery0/pixel/meter/`
 
-包根路径：`vip.mystery0.pixel.meter`，位于 `app/src/main/kotlin/`。
-
-### 数据流
+项目采用单模块分层 MVVM：
 
 ```text
-SpeedDataSource (ISpeedDataSource)
-  ↓ 通过 TrafficStats 逐接口读取物理网卡流量
+SpeedDataSource
+  → 缓存物理 Network 与接口名，读取 TrafficStats
 NetworkRepository
-  ↓ 定时轮询数据源，计算速率差值 → StateFlow<NetSpeedData>
-  ↓ 从 DataStoreRepository 同步所有用户偏好设置为 StateFlow
-NetworkMonitorService (前台服务)
-  ↓ 收集 netSpeed flow
-  ├→ NotificationHelper：将网速渲染为动态 Bitmap 图标或 Live Update 文本
-  └→ OverlayWindow：基于 Compose 的悬浮窗，通过 WindowManager 挂载
+  → 计算实时速度，汇总 DataStore 设置为 StateFlow
+NetworkMonitorService
+  ├→ NotificationHelper：基础通知、Bitmap 动态图标、Live Update
+  └→ OverlayWindow：Compose + WindowManager 悬浮窗
+MainViewModel / SettingsViewModel
+  → 将 Repository 状态提供给 Compose UI
 ```
 
 ### 核心组件
 
-- **`SpeedDataSource`** (`data/source/impl/`)：注册 `NetworkCallback`，过滤 Wi-Fi、Cellular、Ethernet
-  物理接口，用 `ConcurrentHashMap` 缓存接口名，调用 `TrafficStats.getRxBytes/getTxBytes` 逐接口读取流量。这是
-  VPN 流量过滤的核心。
-- **`NetworkRepository`** (`data/repository/`)：中央状态枢纽。按用户配置的采样间隔轮询数据源计算速率差值，暴露多个
-  `StateFlow` 属性（镜像自 `DataStoreRepository`）。所有设置写入委托给 `DataStoreRepository`。
-- **`DataStoreRepository`** (`data/repository/`)：Jetpack DataStore Preferences 封装层。DataStore 名称：
-  `pixel_pulse_preferences`。
-- **`NetworkMonitorService`** (`service/`)：前台服务（Manifest 声明 `specialUse|dataSync`，Android 14+
-  运行时使用 `FOREGROUND_SERVICE_TYPE_SPECIAL_USE`，更低版本使用 `DATA_SYNC`）。收集网速
-  flow，更新通知和悬浮窗。监听息屏/亮屏事件，息屏 2 分钟后暂停监控以省电。
-- **`NotificationHelper`** (`service/`)：构建通知，支持实时 Bitmap 小图标（Canvas 绘制总网速文字）或
-  Live Update（`setShortCriticalText` + `setRequestPromotedOngoing`）。
-- **`OverlayWindow`** (`ui/overlay/`)：基于 Compose 的悬浮窗，挂载到 `WindowManager`。实现
-  `LifecycleOwner`、`ViewModelStoreOwner`、`SavedStateRegistryOwner` 以在 Activity 外宿主 Compose。
-- **`AppModule`** (`di/`)：单一 Koin 模块，注册所有依赖。
-- **Tile Services** (`service/tile/`)：Quick Settings 快捷磁贴，用于开关通知和悬浮窗。
-- **`BootReceiver`** (`receiver/`)：开机自启服务（用户启用时生效）。
+- `data/source/impl/SpeedDataSource.kt`
+  - 注册 `NetworkCallback`，缓存通过 Transport 过滤后的物理接口。
+  - 排除 `TRANSPORT_VPN`，不依赖 `tun0` 等固定接口名黑名单。
+- `data/repository/DataStoreRepository.kt`
+  - 封装 Preferences DataStore，名称为 `pixel_pulse_preferences`。
+  - 管理显示、主题、服务、通知、Overlay 和 Onboarding 状态。
+- `data/repository/NetworkRepository.kt`
+  - 轮询数据源并计算上下行速度，向服务和 UI 暴露 `StateFlow`。
+- `format/SpeedFormatter.kt`
+  - 统一主页、通知、Live Update、Overlay 与设置页的网速格式。
+- `service/NetworkMonitorService.kt`
+  - Foreground Service，Manifest 声明 `specialUse|dataSync`。
+  - Android 14+ 使用 `FOREGROUND_SERVICE_TYPE_SPECIAL_USE`，更低版本使用 `DATA_SYNC`。
+  - 息屏 2 分钟后暂停采样，亮屏后恢复。
+- `service/NotificationHelper.kt`
+  - 构建基础服务通知、Bitmap 动态图标和 Android 16+ Live Update。
+- `ui/overlay/OverlayWindow.kt`
+  - 通过 `ComposeView` + `WindowManager` 宿主 Compose。
+  - 支持拖拽、锁定、位置保存、横竖布局、沉浸模式隐藏和低流量自动隐藏。
+- `ui/onboarding/OnboardingScreen.kt`
+  - 三步首次设置向导，支持跳过、稍后完成、完成并启动和从设置页重新进入。
+- `service/tile/`：Quick Settings Tile，控制通知网速和 Overlay。
+- `receiver/BootReceiver.kt`：用户开启自动启动后响应开机广播并启动服务。
+- `di/AppModule.kt`：Koin 依赖注册入口。
 
-### Activities
+## 6. UI 与功能规范
 
-- `MainActivity`：主界面仪表盘。
-- `SettingsActivity`：设置页面，使用 `me.zhanghai.compose.preference` 库。
+- 使用 Jetpack Compose、Material 3 和 Material You。
+- 默认采用动态取色；支持固定主题色和深色模式 AMOLED Black。
+- 手机设置页采用主目录 + 二级页面；宽屏设备采用双栏布局。
+- 首次安装默认不启用通知网速、Live Update 或 Overlay，由用户在向导中选择。
+- Android 需要 Foreground Service 基础通知；关闭动态通知网速不代表可以移除基础服务通知。
+- 通知动态图标绘制总网速；通知内容支持显示模式、自定义前缀、阈值和颜色。
+- Live Update 仅在 Android 16+ 使用。
+- Overlay 使用 `TYPE_APPLICATION_OVERLAY`，需要用户授权 `SYSTEM_ALERT_WINDOW`。
+- Quick Settings 使用 `TileService`，不在 Tile 中承载复杂业务逻辑。
 
-## 代码质量与开发原则
+## 7. Android 兼容性要求
 
-### 质量要求
+- Android 13+ 才检查 `POST_NOTIFICATIONS` 运行时权限；Android 12/12L 不得错误阻止服务启动。
+- Android 14+ Foreground Service 启动必须符合后台启动限制。
+- BootReceiver 启动服务时应捕获异常，不得使广播处理崩溃。
+- Live Update 依赖 Android 16+ API 和 `POST_PROMOTED_NOTIFICATIONS`。
+- 修改 Overlay、系统栏、刘海区域和沉浸模式行为时必须真机验证。
+- 修改电池优化或后台保活策略时，需要说明系统限制与潜在 Google Play 风险。
 
-- 严格遵循 Kotlin 官方编码规范。
-- 遵循 Modern Android Development (MAD) 指南。
-- 全面使用 Jetpack Compose、Material 3 和动态取色，支持 Pixel 设备的系统色彩体验。
-- 使用 MVVM（ViewModel + StateFlow + Repository）。
-- 使用 **Koin**（Koin-Android、Koin-Compose）进行依赖注入。
-- 核心功能严格禁止使用 Root 或 Shizuku 权限。
-- 单个文件原则上不超过 1000 行。
-- 避免在 Activity 中编写业务逻辑。
+## 8. 国际化
 
-### 功能特性规范
+- 默认 `values/strings.xml` 必须使用英语，作为未知语言的回退资源。
+- `translatable="false"` 只表示不参与翻译，不表示仅在某个 Locale 显示。
+- Locale Config 根据 `resources.properties` 和 `values-*` 目录自动生成。
+- 翻译由 Weblate 托管；新增字符串后必须补齐当前全部语言，或明确标记不可翻译。
+- 文案、格式参数和 XML 转义必须在所有语言中保持兼容。
 
-- 网速统计使用 `TrafficStats` 配合 `ConnectivityManager`。
-- 通过 `ConnectivityManager` 遍历物理网络接口（Wi-Fi、Cellular、Ethernet），排除 VPN 虚拟接口，避免流量双重统计，并直接读取
-  `TrafficStats` 数据。
-- 首次启动不开启显示，由用户选择是否启用。
-- 通知栏动态图标（Notification Icon）需要实时绘制 Bitmap；双向模式下合并展示总量。
-- 悬浮窗（Floating Window）使用 Compose 挂载到 `WindowManager`，并支持独立开关。
-- 快速设置（Quick Settings）通过 `TileService` 支持系统下拉栏快捷开关。
+详见 `docs/architecture/localization.md`。
 
-### Service 分离
+## 9. 文档规范
 
-- 网速监听核心逻辑需运行在前台服务（Foreground Service，type=`dataSync`）中。
-- 业务逻辑应放在前台服务和 Repository 等合适层级中，不应堆叠在 Activity 中。
+文档索引：`docs/README.md`
 
-### 注释
+- 架构说明：`docs/architecture/`
+- UI 与交互说明：`docs/ui/`
+- 现有产品截图：`docs/*.png`
+- **后续所有需求设计文档和实施计划必须放在 `docs/plans/`。**
+- 需求设计文档命名：`docs/plans/YYYY-MM-DD-主题-design.md`
+- 实施计划命名：`docs/plans/YYYY-MM-DD-主题-plan.md`
+- 同一需求的设计与实施计划使用相同主题名称。
+- 已完成且仍具长期参考价值的计划可以保留；纯临时记录应在任务结束时清理。
+- 修改架构、DataStore、权限、服务生命周期或用户交互后，应同步更新对应文档。
 
-- 使用中文编写清晰的 KDoc 与行内注释。
-- 核心算法逻辑（如网络接口过滤）必须添加详细注释说明。
+## 10. 任务完成检查
 
-## 测试与验证
+在向用户报告任务完成前检查：
 
-- 本项目不做单元测试：除非用户明确要求，不新增、修改或维护单元测试代码。
-- 此项目不需要编写单元测试或 Android 测试。
-- 变更代码后，必须执行 `./gradlew :app:assembleDebug` 确保编译通过。
-- 运行 `./gradlew lint` 检查潜在的代码质量问题。
-- 重点测试开启 VPN 场景下的网速统计是否准确，不应包含 VPN 虚拟网卡流量。
-- 必须在真机上测试，优先使用 Pixel 设备。
+- 是否新增了可复用组件，是否需要更新架构文档。
+- 是否改变了权限、后台行为、DataStore Key 或默认值。
+- 是否需要更新 README、隐私政策或 `docs/`。
+- 是否新增字符串并补齐所有语言。
+- 是否执行 Debug 构建和 Lint。
+- 是否需要真机验证 Pixel、VPN、通知、Live Update 或 Overlay 场景。
+- `gradle/libs.versions.toml` 是否仍是版本信息的唯一事实来源。
 
-### 项目本地校验流程
+## 11. Release 签名
 
-1. 命令行执行 `./gradlew :app:assembleDebug`。
-2. 确认无编译错误，且 `libs.versions.toml` 中无过时警告。
-3. 根据变更范围执行 `./gradlew lint`。
-
-## 文档与记忆
-
-文档与记忆采用 Markdown 格式，存放于 `.agentdocs/` 及其子目录下。
-
-索引文档：`.agentdocs/index.md`
-
-### 文档分类
-
-- `prd/`：产品与需求。
-    - `prd/requirements.md`：核心功能需求（PixelMeter 功能清单）。
-- `architecture/`：架构与技术细节。
-    - `architecture/data-source-strategy.md`：单一数据源策略（TrafficStats + ConnectivityManager）。
-    - `architecture/service-lifecycle.md`：前台服务保活、`specialUse|dataSync` 类型与 Android 14+ 适配。
-- `ui/`：界面规范。
-    - `ui/design-system.md`：Material 3 主题与悬浮窗设计规范。
-- `workflow/`：任务流文档，按标准格式命名。
-
-### 全局重要记忆
-
-- **项目名称**：PixelMeter。
-- **设备支持**：
-    - 核心目标：Google Pixel 系列。
-    - 兼容目标：运行原生或类原生 Android（AOSP）的设备。
-- **关键技术决策**：
-    - **DI**：Koin，轻量级，适合本工具。
-    - **Settings UI**：`me.zhanghai.compose.preference` + `com.github.skydoves:colorpicker-compose`。
-    - **Browser**：Chrome Custom Tabs (CCT)，用于集成 Cloudflare 测速。
-
-## 任务处理指南
-
-- 需求不明确时先澄清，例如具体的过滤接口名称、悬浮窗吸附逻辑、通知呈现方式等。
-- 涉及系统底层（如读取 `/proc`）或保活策略修改时，需要在文档中记录潜在兼容性风险。
-- 分阶段实施复杂任务：
-    1. 基础架构搭建（Koin、Compose）。
-    2. 网速监听实现（TrafficStats + ConnectivityManager）。
-    3. UI 层实现（通知栏绘图、悬浮窗）。
-    4. CCT 集成与设置页完善。
-
-### 任务回顾
-
-在任务完成并呈现最终消息前，必须进行以下回顾：
-
-- 检查是否产生新的可复用组件，并按需更新架构文档。
-- 检查 `.agentdocs/` 下的文档是否需要更新。
-- 确认 `libs.versions.toml` 中的依赖版本是否需要关注最新稳定版。
-
-## 签名配置
-
-Release 签名从 `local.properties` 读取，键名如下：
+Release 签名优先从 `local.properties` 读取，缺失时回退到同名环境变量：
 
 - `SIGN_KEY_STORE_FILE`
 - `SIGN_KEY_STORE_PASSWORD`
 - `SIGN_KEY_ALIAS`
 - `SIGN_KEY_PASSWORD`
-
-如果 `local.properties` 不可读，则回退到同名环境变量。

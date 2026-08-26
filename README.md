@@ -5,77 +5,86 @@
 </p>
 
 <p align="center">
-  <strong>Precise internet speed monitor designed for Pixel and Native Android.</strong>
+  <strong>Precise network speed monitoring for Pixel and native Android.</strong>
 </p>
 
 <p align="center">
-    <a href="https://github.com/Pixel-Tailor-CN/PixelMeter/releases/latest"><img src="https://img.shields.io/github/v/release/Mystery00/PixelMeter" alt="GitHub Release"></a>
-    <a href="https://play.google.com/store/apps/details?id=vip.mystery0.pixel.meter"><img src="https://img.shields.io/badge/Google_Play-PixelMeter-green?logo=google-play&logoColor=white" alt="Google Play"></a>
-    <a href="https://hosted.weblate.org/engage/pixel-meter/"><img src="https://hosted.weblate.org/widget/pixel-meter/android-app-strings/svg-badge.svg" alt="Translation status"></a>
-    <a href="LICENSE"><img src="https://img.shields.io/github/license/Mystery00/PixelMeter" alt="License"></a>
+  <a href="https://github.com/Pixel-Tailor-CN/PixelMeter/releases/latest"><img src="https://img.shields.io/github/v/release/Mystery00/PixelMeter" alt="GitHub Release"></a>
+  <a href="https://play.google.com/store/apps/details?id=vip.mystery0.pixel.meter"><img src="https://img.shields.io/badge/Google_Play-PixelMeter-green?logo=google-play&logoColor=white" alt="Google Play"></a>
+  <a href="https://hosted.weblate.org/engage/pixel-meter/"><img src="https://hosted.weblate.org/widget/pixel-meter/android-app-strings/svg-badge.svg" alt="Translation status"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/Mystery00/PixelMeter" alt="License"></a>
 </p>
 
 [简体中文](README_CN.md)
 
 ## About
 
-Pixel Meter is a network speed monitor application designed specifically for Google Pixel and native
-Android devices. Unlike traditional speed monitors, Pixel Meter solves a common issue where using a
-VPN causes the displayed network speed to be double the actual speed (counting both the physical
-interface and the virtual VPN interface).
+Pixel Meter is a lightweight network speed monitor designed for Google Pixel and native or near-stock Android devices.
 
-**Pixel Meter intelligently filters out VPN traffic**, directly reading from physical network
-interfaces (Wi-Fi, Cellular, Ethernet) to provide accurate real-time speed statistics.
+Many speed monitors count traffic from both the physical network interface and the VPN virtual network, which can make the displayed speed approximately twice the real value. Pixel Meter uses `ConnectivityManager.NetworkCallback` to identify Wi-Fi, cellular and Ethernet networks, excludes networks with `TRANSPORT_VPN`, and reads per-interface counters through `TrafficStats`.
+
+No fixed `tun0` blacklist, Root access or Shizuku service is required.
 
 ## Screenshots
 
 <p align="center">
-  <img src="docs/Screenshot_EN.png" width="400" alt="App Screenshot"/>
+  <img src="docs/Screenshot_EN.png" width="400" alt="Pixel Meter screenshot"/>
 </p>
 <p align="center">
-  <img src="docs/Component.png" width="175" alt="App Component"/>
+  <img src="docs/Component.png" width="175" alt="Pixel Meter component"/>
 </p>
 
 ## Features
 
-- **Precise Traffic Stats**: Uses `ConnectivityManager` and `TrafficStats` to filter out `tun0` and
-  other virtual interfaces.
-- **Native Experience**: Built with Jetpack Compose and Material 3, supporting Dynamic Color on
-  Pixel devices.
-- **Flexible Display**:
-    - **Notification Bar**: Dynamic icon that updates in real-time. Supports customizable display
-      modes (Total Speed, Upload Only, Download Only) and text prefixes.
-    - **Floating Window**: Overlay that can be toggled and moved independently. Fully customizable:
-        - Background and Text Color
-        - Corner Radius and Text Size
-        - Custom Text Prefixes and Order
-    - **Quick Settings Tiles**: Toggle Overlay and Notification directly from the system control
-      panel.
-- **Live Update**: Supports Android 16+ status bar chip update.
-- **Privacy Focused**: All data is processed locally. No traffic data is uploaded.
-- **Built-in Tools**: Integrated Cloudflare Speed Test via Chrome Custom Tabs.
+- **Accurate physical-interface statistics**: Excludes VPN transports and reads Wi-Fi, cellular and Ethernet counters directly.
+- **First-launch setup wizard**: Choose notification speed, Android 16+ Live Update and the floating window with only the required permissions.
+- **Notification speed display**:
+  - Real-time Bitmap status bar icon.
+  - Total, upload-only and download-only modes.
+  - Custom prefixes, display threshold, icon sizing and notification color.
+- **Android 16+ Live Update**: Uses the promoted ongoing status bar presentation when enabled and supported.
+- **Floating window**:
+  - Compose-based draggable Overlay.
+  - Horizontal or vertical layout, alignment, spacing, text size, padding, colors and corner radius.
+  - Position lock and persistence.
+  - Optional landscape, immersive-mode and sustained-low-traffic hiding.
+- **Quick Settings Tiles**: Toggle notification speed and the floating window from System UI.
+- **Material You**: Dynamic Color, configurable fixed theme color and optional AMOLED Black surfaces.
+- **Background controls**: Optional boot start, battery optimization entry and screen-off sampling suspension.
+- **Cloudflare Speed Test**: Opens `speed.cloudflare.com` with Chrome Custom Tabs.
+- **Privacy focused**: No analytics, advertising SDK or traffic upload.
 
 ## Requirements
 
-- **Device**: Google Pixel series (recommended) or devices running native Android (AOSP).
-- **Android Version**: Android 12 (API Level 31) or higher.
-- **Permissions**: Notification (for the status bar icon) and Overlay (for the floating window).
+- Android 12 / API 31 or later.
+- Google Pixel is the primary target; standard AOSP-style devices are also supported.
+- Notification permission is required on Android 13+ to run the monitoring service.
+- Overlay permission is required only for the floating window.
+- Live Update requires Android 16 or later.
+
+Android requires an ongoing notification for a Foreground Service. Disabling dynamic notification speed leaves a minimal service notification while monitoring is active.
 
 ## Architecture
 
-- **Language**: Kotlin
-- **UI Framework**: Jetpack Compose (Material 3)
-- **Architecture Pattern**: MVVM + Clean Architecture
-- **Dependency Injection**: Koin
-- **Data Source**: `TrafficStats` + `ConnectivityManager` (Single Source of Truth)
+- Kotlin + Jetpack Compose + Material 3
+- Single-module layered MVVM
+- Repository + StateFlow
+- Koin dependency injection
+- Preferences DataStore
+- `ConnectivityManager` + `TrafficStats`
 
-## Translations
+Detailed project documentation is available in [`docs/README.md`](docs/README.md).
 
-Pixel Meter translations are hosted on Weblate. Contributions are welcome, especially for app
-strings in new languages or improvements to existing translations.
+## Languages
 
-[Help translate Pixel Meter on Weblate](https://hosted.weblate.org/engage/pixel-meter/)
+The app currently includes English, Simplified Chinese, Portuguese, Brazilian Portuguese and Russian resources. Translations are managed on Weblate.
+
+[Help translate Pixel Meter](https://hosted.weblate.org/engage/pixel-meter/)
+
+## Privacy
+
+All traffic counters and settings are processed locally. See [PRIVACY_POLICY.md](PRIVACY_POLICY.md).
 
 ## License
 
-This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
+Apache License 2.0. See [LICENSE](LICENSE).

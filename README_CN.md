@@ -5,75 +5,92 @@
 </p>
 
 <p align="center">
-  <strong>专为 Pixel 和原生 Android 设计的精准网速指示器。</strong>
+  <strong>专为 Pixel 和原生 Android 设计的精准网速监控工具。</strong>
 </p>
 
 <p align="center">
-    <a href="https://github.com/Pixel-Tailor-CN/PixelMeter/releases/latest"><img src="https://img.shields.io/github/v/release/Mystery00/PixelMeter" alt="GitHub Release"></a>
-    <a href="https://play.google.com/store/apps/details?id=vip.mystery0.pixel.meter"><img src="https://img.shields.io/badge/Google_Play-PixelMeter-green?logo=google-play&logoColor=white" alt="Google Play"></a>
-    <a href="https://hosted.weblate.org/engage/pixel-meter/"><img src="https://hosted.weblate.org/widget/pixel-meter/android-app-strings/svg-badge.svg" alt="翻译状态"></a>
-    <a href="LICENSE"><img src="https://img.shields.io/github/license/Mystery00/PixelMeter" alt="License"></a>
+  <a href="https://github.com/Pixel-Tailor-CN/PixelMeter/releases/latest"><img src="https://img.shields.io/github/v/release/Mystery00/PixelMeter" alt="GitHub Release"></a>
+  <a href="https://play.google.com/store/apps/details?id=vip.mystery0.pixel.meter"><img src="https://img.shields.io/badge/Google_Play-PixelMeter-green?logo=google-play&logoColor=white" alt="Google Play"></a>
+  <a href="https://hosted.weblate.org/engage/pixel-meter/"><img src="https://hosted.weblate.org/widget/pixel-meter/android-app-strings/svg-badge.svg" alt="翻译状态"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/Mystery00/PixelMeter" alt="License"></a>
 </p>
 
 [English](README.md)
 
 ## 简介
 
-Pixel Meter 是一款专为 Google Pixel 和原生 Android 设备设计的网速监控应用。它可以解决在使用 VPN
-时，传统网速显示应用因同时统计物理接口和虚拟接口流量而导致显示速度翻倍的问题。
+Pixel Meter 是一款面向 Google Pixel 和原生/类原生 Android 设备的轻量级实时网速监控应用。
 
-**Pixel Meter 智能过滤 VPN 流量**，直接从物理网络接口（Wi-Fi、蜂窝网络、以太网）读取数据，提供精准的实时网速统计。
+传统网速工具在 VPN 场景下可能同时统计物理网络接口和 VPN 虚拟网络，导致显示速度接近实际值的两倍。Pixel Meter 使用 `ConnectivityManager.NetworkCallback` 识别 Wi-Fi、蜂窝网络和以太网，通过 `TRANSPORT_VPN` 排除 VPN 网络，再使用 `TrafficStats` 读取物理接口计数器。
+
+整个过程不依赖固定的 `tun0` 黑名单，也不需要 Root 或 Shizuku。
 
 ## 软件截图
 
 <p align="center">
-  <img src="docs/Screenshot_CN.png" width="400" alt="软件截图"/>
+  <img src="docs/Screenshot_CN.png" width="400" alt="Pixel Meter 软件截图"/>
 </p>
 <p align="center">
-  <img src="docs/Component.png" width="175" alt="软件组件展示"/>
+  <img src="docs/Component.png" width="175" alt="Pixel Meter 组件"/>
 </p>
 
 ## 核心功能
 
-- **精准流量统计**: 结合 `ConnectivityManager` 和 `TrafficStats`，自动剔除 `tun0` 等虚拟接口流量。
-- **原生体验**: 基于 Jetpack Compose 和 Material 3 构建，支持 Pixel 动态取色。
-- **多种显示方式**:
-    - **通知栏**: 实时绘制动态图标。
-    - **悬浮窗**: 支持独立开关和拖拽。
-    - **合并模式**: 支持显示总网速（上传+下载）。
-- **隐私安全**: 所有数据仅在本地处理，绝不上传任何流量数据。
-- **内置工具**: 集成 Chrome Custom Tabs，可快速访问 Cloudflare 进行测速。
+- **精准物理接口统计**：排除 VPN Transport，直接读取 Wi-Fi、蜂窝网络和以太网接口流量。
+- **首次设置向导**：分步选择通知网速、Android 16+ Live Update 和悬浮窗，只申请所选功能需要的权限。
+- **通知栏网速**：
+  - 实时绘制 Bitmap 状态栏图标。
+  - 支持总网速、仅上行、仅下行。
+  - 支持自定义前缀、显示阈值、图标字号和通知颜色。
+- **Android 16+ Live Update**：在系统支持且用户启用时使用 Promoted Ongoing 状态栏展示。
+- **桌面悬浮窗**：
+  - 基于 Compose 的可拖拽 Overlay。
+  - 支持横排/竖排、对齐、间距、字号、内边距、颜色和圆角。
+  - 支持锁定和位置记忆。
+  - 支持横屏隐藏、沉浸模式隐藏和持续低流量自动隐藏。
+- **Quick Settings 磁贴**：从系统下拉栏快速切换通知网速和悬浮窗。
+- **Material You**：支持动态取色、固定主题色和 AMOLED Black。
+- **后台控制**：可选开机启动、电池优化设置入口和息屏采样暂停。
+- **Cloudflare 测速**：通过 Chrome Custom Tabs 打开 `speed.cloudflare.com`。
+- **隐私优先**：不包含统计、广告 SDK，不上传网络流量。
 
 ## 系统要求
 
-- **设备**: 推荐 Google Pixel 系列，或运行原生 Android (AOSP) 的设备。
-- **Android 版本**: Android 12 (API Level 31) 及以上。
-- **权限**: 通知权限（用于状态栏图标）和悬浮窗权限（用于桌面悬浮窗）。
+- Android 12 / API 31 及以上。
+- 主要目标设备为 Google Pixel，同时兼容遵循标准 Android 网络接口行为的 AOSP 类设备。
+- Android 13+ 运行监听服务需要通知权限。
+- 仅悬浮窗需要“显示在其他应用上层”权限。
+- Live Update 需要 Android 16 或更高版本。
+
+Android 要求 Foreground Service 持续显示通知。关闭动态通知网速后，监听运行期间仍会保留最简服务通知。
 
 ## 技术架构
 
-- **语言**: Kotlin
-- **UI 框架**: Jetpack Compose (Material 3)
-- **架构模式**: MVVM + Clean Architecture
-- **依赖注入**: Koin
-- **核心数据源**: `TrafficStats` + `ConnectivityManager` (单一可信数据源)
+- Kotlin + Jetpack Compose + Material 3
+- 单模块分层 MVVM
+- Repository + StateFlow
+- Koin 依赖注入
+- Preferences DataStore
+- `ConnectivityManager` + `TrafficStats`
 
-## 参与翻译
+详细项目文档参见 [`docs/README.md`](docs/README.md)。
 
-Pixel Meter 正在使用 Weblate 托管翻译。欢迎开发者和用户贡献新的语言，或帮助改进已有翻译文本。
+## 支持语言
+
+当前包含英语、简体中文、葡萄牙语、巴西葡萄牙语和俄语资源，翻译通过 Weblate 管理。
 
 [在 Weblate 上帮助翻译 Pixel Meter](https://hosted.weblate.org/engage/pixel-meter/)
 
+## 隐私
+
+所有流量计数和设置均在设备本地处理，详见 [PRIVACY_POLICY_CN.md](PRIVACY_POLICY_CN.md)。
+
 ## 相关链接
 
-- **Pixel Tailor CN**: [https://pixel.mystery0.app](https://pixel.mystery0.app)  
-  “为不完美的体验，做精细的缝补。” 专注于提升 Google Pixel 国内使用体验的开源工具集，强调原生 Android
-  体验、隐私至上与 Material You 适配。
-
-- **问题反馈**: [GitHub Issues](https://github.com/Pixel-Tailor-CN/PixelMeter/issues/new)
-
-- **Telegram 频道**: [t.me/pixel_tailor_cn](https://t.me/pixel_tailor_cn)
+- [Pixel Tailor CN](https://pixel.mystery0.app)
+- [GitHub Issues](https://github.com/Pixel-Tailor-CN/PixelMeter/issues/new)
+- [Telegram 频道](https://t.me/pixel_tailor_cn)
 
 ## 许可证
 
-本项目采用 Apache License 2.0 许可证。详情请参阅 [LICENSE](LICENSE) 文件。
+本项目采用 Apache License 2.0，详情参见 [LICENSE](LICENSE)。
